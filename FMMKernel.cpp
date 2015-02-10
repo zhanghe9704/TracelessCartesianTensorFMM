@@ -63,7 +63,7 @@ void Charge_to_Multipole(Box & box, double *Charge, double *Charge_x, double *Ch
     double Multipole_x = box.center[0];
     double Multipole_y = box.center[1];
     double Multipole_z = box.center[2];
-	for (unsigned long int i = 0; i < box.n_ptcl; ++i)
+	for (unsigned int i = 0; i < box.n_ptcl; ++i)
 	{
 		Charge_2_M_pre(Charge[idx], Multipole_x, Multipole_y, Multipole_z, Charge_x[idx], Charge_y[idx], Charge_z[idx], temp_M);
 		for (int j = 0; j < Number_of_total_element; ++j)
@@ -210,6 +210,7 @@ double MultipolePotential(double *Multipole, double Multi_x, double Multi_y, dou
 	return multipole_potential;
 }
 
+
 //This function is used in the "Charge_to_Local" function.
 void Charge_to_Local_pre(double q, double old_x, double old_y, double old_z, double new_x, double new_y, double new_z, double *L_expansion)
 {
@@ -228,6 +229,36 @@ void Charge_to_Local_pre(double q, double old_x, double old_y, double old_z, dou
 		double r_coe = (1 - (n % 2) * 2) / (pow(r_2, n) * sqrt(r_2));
 
 		L_expansion[i] = q * Nabla_1_element_r(n1, n2, n3, n, x, y, z, r_2, r_coe);
+	}
+}
+
+
+void Charge_to_Local(Box &box, unsigned long int * ptclist, double *q, double *old_x, double *old_y, double *old_z, double new_x, double new_y, double new_z, double *L_expansion)
+{
+	double *temp_L = scratch;
+	memset(temp_L, 0, Number_of_total_element*sizeof(double));
+	memset(L_expansion, 0, Number_of_total_element*sizeof(double));
+
+    unsigned long int idx = box.first_ptcl;
+	for (unsigned int i = 0; i < box.n_ptcl; ++i)
+	{
+		Charge_to_Local_pre(q[idx], old_x[idx], old_y[idx], old_z[idx], new_x, new_y, new_z, temp_L);
+		for (int i = 0; i < Number_of_total_element; i++)
+		{
+			L_expansion[i] += temp_L[i];
+		}
+        idx = ptclist[idx];
+	}
+
+
+	for (int i = 0; i < Number_of_total_element; i++)
+	{
+		int n1 = index_n1[i];
+		int n2 = index_n2[i];
+		int n3 = index_n3[i];
+
+		int n = n1 + n2 + n3;
+		L_expansion[i] *= (1 - (n % 2) * 2) / Factorial[n];
 	}
 }
 

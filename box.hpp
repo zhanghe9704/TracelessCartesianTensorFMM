@@ -16,7 +16,7 @@ typedef struct Box{
 	unsigned long int parent = 0;
 	unsigned long int child[8] = {0};
 	unsigned long int first_ptcl = 0;
-	unsigned long int n_ptcl = 0;
+	unsigned int n_ptcl = 0;
 	int n_child = 0;
 	double box_size = 0;
 } Box;
