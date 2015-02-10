@@ -105,7 +105,7 @@ int main(){
     Coulomb(x,y,z,q,N,N,phi_check);
 
     int n_ptc_box = 10;
-    int n_rank = 4;
+    int n_rank = 6;
 
     fmm(x,  y,  z,  q, N, n_rank, n_ptc_box, phi);
 

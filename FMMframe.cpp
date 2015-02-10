@@ -77,8 +77,8 @@ int well_separated(unsigned long int obj_idx, Box &obj_box, unsigned long int sr
     Multipole_to_Local(&multipole_expns[src_idx*Number_of_total_element], src_box.center[0], src_box.center[1], src_box.center[2],obj_box.center[0],obj_box.center[1],obj_box.center[2],multipole_expns);
 
     for (int i=0; i<Number_of_total_element; ++i){
-        local_expns[obj_idx*Number_of_total_element+i] += local_expns[i];
-        local_expns[src_idx*Number_of_total_element+i] += multipole_expns[i];
+        local_expns[src_idx*Number_of_total_element+i] += local_expns[i];
+        local_expns[obj_idx*Number_of_total_element+i] += multipole_expns[i];
     }
     return 0;
 }
@@ -291,43 +291,6 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
         else{
             check_colleague_child(tree, itr, parent_idx, x, y, z, q, phi);
         }
-//        if(tree[itr].parent>0)  local_exp_from_parent(parent_idx, tree[parent_idx], itr, tree[itr] );   //Inherit the local expansion from the parent box
-
-//        for(int i=0; clg[parent_idx].clg[i]>0;++i){     //Check all the child boxes of the colleagues of b's parent box
-//            unsigned long int clg_idx = clg[parent_idx].clg[i];
-//            for(int j=0; j<tree[clg_idx].n_child;++j){
-//                unsigned long int clg_child_idx = tree[clg_idx].child[j];
-//                if(clg_child_idx>itr){
-//                    switch(separate(tree[itr],tree[clg_child_idx])){
-//                    case 0:{    //These two boxes are adjacent.
-//                        if(tree[itr].n_child==0){   //box itr is childless
-//                                //Coulomb_potential(tree[itr],x,y,z,q,phi);
-//                                if(tree[clg_child_idx].n_child==0){     //box clg_child_idx is childless
-//                                    Coulomb_potential(tree[itr],tree[clg_child_idx],x,y,z,q,phi);
-//                                }
-//                                else{       //child clg_child_idx is NOT childless
-//                                    //check the descent of box clg_child_idx
-//                                    check_descent(tree, itr, tree[itr], tree[clg_child_idx], x, y, z, q, phi);
-//                                }
-//                        }
-//                        else{
-//                                if(tree[clg_child_idx].n_child==0){     //box clg_child_idx is childless
-//                                    //check the descent of box itr
-//                                    check_descent(tree, clg_child_idx, tree[clg_child_idx], tree[itr], x, y, z, q, phi);
-//                                }
-//                        }
-//                        break;
-//                    }
-//                    case 2:{    //These two boxes are well separated.
-//                        well_separated(itr, tree[itr], clg_child_idx, tree[clg_child_idx]);
-//                        break;
-//                    }
-//                    default:
-//                        cout<<"Warning, unexpected relation between the boxes in fmm()"<<endl;
-//                    }
-//                }
-//            }
-//        }
 
         if(tree[itr].n_child==0){
             Coulomb_potential(tree[itr],x,y,z,q,phi);
