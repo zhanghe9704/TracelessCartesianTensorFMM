@@ -46,7 +46,6 @@ int configure_fmm(int Max_rank, unsigned long int n_ptc, unsigned long int n_box
 
 //Release the scratch memory in heap
 int end_fmm(){
-    delete[] ptclist;
 	delete[] scratch;
 	delete[] multipole_expns;
 	delete[] local_expns;

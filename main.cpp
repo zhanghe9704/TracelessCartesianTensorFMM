@@ -8,6 +8,8 @@
 
 #include <cstring>
 #include <cmath>
+#include <random>
+#include <chrono>
 
 #include <fstream>
 
@@ -54,9 +56,22 @@ int scale(double *x, unsigned long int n){
 	return 0;
 }
 
+double error(double * phi, double * phi_fmm, unsigned long int n){
+    double sum_phi = 0;
+    double sum_dphi = 0;
+    for(unsigned long int i=0; i<n; ++i){
+        sum_phi += pow(phi[i],2);
+        sum_dphi += pow(phi[i]-phi_fmm[i],2);
+    }
+    return sqrt(sum_dphi/sum_phi);
+}
+
 int main(){
 
-	unsigned long int N=100;
+	unsigned long int N=1e5;
+	unsigned long int N_calc = 1000;
+	int n_ptc_box = 200;
+    int n_rank = 4;
 
 	double * x = new double[N];
 	double * y = new double[N];
@@ -73,49 +88,63 @@ int main(){
 //		z[i] = rand();
 //		q[i] = 1;
 //	}
-//
-//	scale(x, N);
-//	scale(y, N);
-//	scale(z, N);
-//
-	char filename[30] = "xyz.txt";
-//    std::ofstream outfile;
-//    outfile.open(filename);
-//    for(unsigned long int i=0;i<N;++i){
-//        outfile<<x[i]<<' '<<y[i]<<' '<<z[i]<<endl;
-//    }
-//    outfile.close();
-//    return 0;
 
-    std::ifstream infile;
-    infile.open(filename);
-    for(unsigned long int i=0; i<N; ++i){
-        infile>>x[i];
-        infile>>y[i];
-        infile>>z[i];
+//  normal distribution.
+    // obtain a seed from the timer
+    std::default_random_engine generator;
+    generator.seed(time(NULL));
+    std::normal_distribution<double> distribution(0.0,1.0);
+    for(unsigned long int i=0;i<N;++i){
+        x[i] = distribution(generator);
+        y[i] = distribution(generator);
+        z[i] = distribution(generator);
         q[i] = 1;
     }
-    infile.close();
+
+	scale(x, N);
+	scale(y, N);
+	scale(z, N);
+//
+//	char filename[30] = "xyz.txt";
+////    std::ofstream outfile;
+////    outfile.open(filename);
+////    for(unsigned long int i=0;i<N;++i){
+////        outfile<<x[i]<<' '<<y[i]<<' '<<z[i]<<endl;
+////    }
+////    outfile.close();
+////    return 0;
+//
+//    std::ifstream infile;
+//    infile.open(filename);
+//    for(unsigned long int i=0; i<N; ++i){
+//        infile>>x[i];
+//        infile>>y[i];
+//        infile>>z[i];
+//        q[i] = 1;
+//    }
+//    infile.close();
 
     cout<<x[0]<<' '<<y[0]<<' '<<z[0]<<endl;
     cout<<x[N-1]<<' '<<y[N-1]<<' '<<z[N-1]<<endl;
 
 
 
-    Coulomb(x,y,z,q,N,N,phi_check);
+    Coulomb(x,y,z,q,N,N_calc,phi_check);
 
-    int n_ptc_box = 10;
-    int n_rank = 6;
 
+    cout<<"start FMM"<<endl;
     fmm(x,  y,  z,  q, N, n_rank, n_ptc_box, phi);
+    cout<<"end FMM"<<endl;
 
     char filename2[30] = "checkphi.txt";
     std::ofstream output;
     output.open(filename2);
-    for(unsigned long int i=0;i<N;++i){
+    for(unsigned long int i=0;i<N_calc;++i){
         output<<phi[i]<<' '<<phi_check[i]<<' '<<phi[i]-phi_check[i]<<endl;
     }
     output.close();
+
+    cout<<error(phi,phi_check,N_calc)<<endl;
 
     delete[] x;
     delete[] y;

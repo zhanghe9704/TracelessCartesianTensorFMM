@@ -1,5 +1,6 @@
 #include "box.hpp"
 
+
 int find_root_center(double *x, double * y, double * z, const unsigned long int N, double &cx, double &cy, double &cz, double &size){
 	double max_x = x[0];
 	double max_y = y[0];
@@ -153,7 +154,7 @@ int separate(Box &box1, Box &box2){
 	if (large_size<small_size) std::swap(large_size, small_size);
 
 	for(int i=0; i<3; ++i){
-		distance[i] = abs(box1.center[i]-box2.center[i]);
+		distance[i] = fabs(box1.center[i]-box2.center[i]);
 	}
 
 	large_size = 1.5*large_size;
@@ -205,15 +206,17 @@ int create_colleague(vector<Box> &box, vector<Colleague> &clg){
 			unsigned long int prnt_clg = clg[prnt].clg[j];
 			for (int k=0; k<box[prnt_clg].n_child; ++k){
 				unsigned long int prnt_clg_cld = box[prnt_clg].child[k];
-				if (separate(box[i], box[prnt_clg_cld])==0){
+//				if (separate(box[i], box[prnt_clg_cld])==0){
+                int sep = separate(box[i], box[prnt_clg_cld]);
+                if (sep==0){
 					clg[i].clg[count] = prnt_clg_cld;
+					if(count>26) cout<<"error: "<<count<<' '<<sep<<endl;
 					count += 1;
 				}
 			}
 
 		}
 	}
-
 	return 0;
 }
 

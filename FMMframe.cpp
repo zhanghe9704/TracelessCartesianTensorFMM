@@ -214,11 +214,13 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
 	ptclist = new unsigned long int[n_ptc];
 	memset(ptclist, 0, n_ptc*sizeof(unsigned long int));
 
+
+
+
 	create_tree(x,y,z,n_ptc, n_ptc_box, tree, ptclist);
 
     configure_fmm(max_rank, n_ptc, tree.size());
 	output<<n_Max_rank<<' '<<Number_of_total_element<<endl;
-
 
 	for(unsigned long int i=0; i<n_ptc; ++i){
 		output<<i<<' '<<ptclist[i]<<' '<<x[i]<<' '<<y[i]<<' '<<z[i]<<endl;
@@ -229,17 +231,19 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
 		output<<i<<' '<<*itr<<endl;
 		++i;
 	}
-
-	output<<clg.size()<<endl;
+//
+//	output<<clg.size()<<endl;
 
 	create_colleague(tree, clg);
-	output<<clg.size()<<endl;
+//	output<<clg.size()<<endl;
+//
+//
+//	output<<endl;
+//	for(unsigned long int i=0; i<clg.size(); ++i){
+//		output<<clg[i];
+//	}
 
 
-	output<<endl;
-	for(unsigned long int i=0; i<clg.size(); ++i){
-		output<<clg[i];
-	}
 
     calc_multipole(tree, q, x, y, z);
 
@@ -299,7 +303,7 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
 
     }
 
-
+    delete[] ptclist;
 	end_fmm();
 
 	for(unsigned long int i=0; i<Number_of_particle;++i){

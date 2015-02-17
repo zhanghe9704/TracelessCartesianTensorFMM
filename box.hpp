@@ -6,6 +6,7 @@
 #include <iostream>
 #include <utility>
 #include <cstdlib>
+#include <cmath>
 
 using std::vector;
 using std::cout;
@@ -22,7 +23,7 @@ typedef struct Box{
 } Box;
 
 typedef struct Colleague{
-	unsigned long int clg[27] = {0};
+	unsigned long int clg[28] = {0}; //At most 27 colleagues, the last 0 means the end.
 } Colleague;
 
 
