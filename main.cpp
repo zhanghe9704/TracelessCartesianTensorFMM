@@ -104,6 +104,7 @@ int main(){
 	scale(x, N);
 	scale(y, N);
 	scale(z, N);
+	cout<<N<<" particles initialized!"<<endl;
 //
 //	char filename[30] = "xyz.txt";
 ////    std::ofstream outfile;
@@ -124,11 +125,7 @@ int main(){
 //    }
 //    infile.close();
 
-    cout<<x[0]<<' '<<y[0]<<' '<<z[0]<<endl;
-    cout<<x[N-1]<<' '<<y[N-1]<<' '<<z[N-1]<<endl;
-
-
-
+    cout<<"Calculate the first "<<N_calc<<" particles by the pairwise Coulomb formula!"<<endl;
     Coulomb(x,y,z,q,N,N_calc,phi_check);
 
 
@@ -136,15 +133,15 @@ int main(){
     fmm(x,  y,  z,  q, N, n_rank, n_ptc_box, phi);
     cout<<"end FMM"<<endl;
 
-    char filename2[30] = "checkphi.txt";
-    std::ofstream output;
-    output.open(filename2);
-    for(unsigned long int i=0;i<N_calc;++i){
-        output<<phi[i]<<' '<<phi_check[i]<<' '<<phi[i]-phi_check[i]<<endl;
-    }
-    output.close();
+//    char filename2[30] = "checkphi.txt";
+//    std::ofstream output;
+//    output.open(filename2);
+//    for(unsigned long int i=0;i<N_calc;++i){
+//        output<<phi[i]<<' '<<phi_check[i]<<' '<<phi[i]-phi_check[i]<<endl;
+//    }
+//    output.close();
 
-    cout<<error(phi,phi_check,N_calc)<<endl;
+    cout<<"Relative error: "<<error(phi,phi_check,N_calc)<<endl;
 
     delete[] x;
     delete[] y;

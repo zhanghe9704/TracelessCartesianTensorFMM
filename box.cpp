@@ -206,11 +206,8 @@ int create_colleague(vector<Box> &box, vector<Colleague> &clg){
 			unsigned long int prnt_clg = clg[prnt].clg[j];
 			for (int k=0; k<box[prnt_clg].n_child; ++k){
 				unsigned long int prnt_clg_cld = box[prnt_clg].child[k];
-//				if (separate(box[i], box[prnt_clg_cld])==0){
-                int sep = separate(box[i], box[prnt_clg_cld]);
-                if (sep==0){
+                if (separate(box[i], box[prnt_clg_cld])==0){
 					clg[i].clg[count] = prnt_clg_cld;
-					if(count>26) cout<<"error: "<<count<<' '<<sep<<endl;
 					count += 1;
 				}
 			}

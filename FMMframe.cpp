@@ -220,18 +220,18 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
 	create_tree(x,y,z,n_ptc, n_ptc_box, tree, ptclist);
 
     configure_fmm(max_rank, n_ptc, tree.size());
-	output<<n_Max_rank<<' '<<Number_of_total_element<<endl;
-
-	for(unsigned long int i=0; i<n_ptc; ++i){
-		output<<i<<' '<<ptclist[i]<<' '<<x[i]<<' '<<y[i]<<' '<<z[i]<<endl;
-	}
-
-	int i=0;
-	for(auto itr=tree.begin(); itr!=tree.end(); ++itr){
-		output<<i<<' '<<*itr<<endl;
-		++i;
-	}
+//	output<<n_Max_rank<<' '<<Number_of_total_element<<endl;
 //
+//	for(unsigned long int i=0; i<n_ptc; ++i){
+//		output<<i<<' '<<ptclist[i]<<' '<<x[i]<<' '<<y[i]<<' '<<z[i]<<endl;
+//	}
+//
+//	int i=0;
+//	for(auto itr=tree.begin(); itr!=tree.end(); ++itr){
+//		output<<i<<' '<<*itr<<endl;
+//		++i;
+//	}
+////
 //	output<<clg.size()<<endl;
 
 	create_colleague(tree, clg);
@@ -306,10 +306,10 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
     delete[] ptclist;
 	end_fmm();
 
-	for(unsigned long int i=0; i<Number_of_particle;++i){
-        output<<phi[i]<<endl;
-	}
-
-    output.close();
+//	for(unsigned long int i=0; i<Number_of_particle;++i){
+//        output<<phi[i]<<endl;
+//	}
+//
+//    output.close();
 	return 0;
 }
