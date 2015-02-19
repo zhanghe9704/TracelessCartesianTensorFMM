@@ -249,6 +249,9 @@ const int index_n3[2300]={
 
 const int n_Rank_Multipole_Start_Position[24] = { 0, 1, 4, 10, 20, 35, 56, 84, 120, 165, 220, 286, 364, 455, 560, 680, 816, 969, 1140, 1330, 1540, 1771, 2024, 2301 };
 
+const int multipole_ceof_length[24] = {0, 1, 7, 28, 84, 210, 462, 924, 1716, 3003, 5005, 8008, 12376, 18564, 27132, 38760, 54264, 74613, 100947, 134596, 177100, 230230, 296010, 376741};
+
+
 int configure_fmm(int Max_rank, unsigned long int n_ptc, unsigned long int n_box);
 int end_fmm();
 

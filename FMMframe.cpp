@@ -7,12 +7,21 @@
 int calc_multipole(vector<Box> &tree, double * q, double * x, double * y, double * z){
     //use global ptclist, multipole_expns.
 
+    double *multipole_coef = new double[multipole_ceof_length[n_Max_rank+1]];
+    double current_childbox_size = tree[tree.size()-1].box_size;
+    multipole_to_multipole_coef(current_childbox_size, multipole_coef);
+
     for(unsigned long int itr=tree.size()-1; itr>0; --itr){
 		if (tree[itr].n_child>0){  //parent box, take summation of the multipole expansion of the child boxes
                 for (int i=0; i<tree[itr].n_child; ++i){
                         unsigned long int child_ptr = tree[itr].child[i];
-                        //Translate the mltp of a child box to the parent box, use the first Number_of_total_element number of multipoles as scratch variable
-                        Multipole_to_Multipole(tree[child_ptr].center[0],tree[child_ptr].center[1],tree[child_ptr].center[2],tree[itr].center[0],tree[itr].center[1],tree[itr].center[2], &multipole_expns[child_ptr*Number_of_total_element], multipole_expns );
+////                        Translate the mltp of a child box to the parent box, use the first Number_of_total_element number of multipoles as scratch variable
+//                        Multipole_to_Multipole(tree[child_ptr].center[0],tree[child_ptr].center[1],tree[child_ptr].center[2],tree[itr].center[0],tree[itr].center[1],tree[itr].center[2], &multipole_expns[child_ptr*Number_of_total_element], multipole_expns );
+                        if (tree[child_ptr].box_size>1.5*current_childbox_size){
+                            update_multipole_to_multipole_coef(multipole_coef);
+                            current_childbox_size = tree[child_ptr].box_size;
+                        }
+                        Multipole_to_Multipole(tree[child_ptr].center[0],tree[child_ptr].center[1],tree[child_ptr].center[2],tree[itr].center[0],tree[itr].center[1],tree[itr].center[2], multipole_coef, &multipole_expns[child_ptr*Number_of_total_element], multipole_expns );
                         for (int j=0; j<Number_of_total_element; ++j){
                             multipole_expns[itr*Number_of_total_element+j] += multipole_expns[j];
                         }
@@ -24,7 +33,7 @@ int calc_multipole(vector<Box> &tree, double * q, double * x, double * y, double
             Charge_to_Multipole(tree[itr], q, x, y, z, ptclist, &multipole_expns[itr*Number_of_total_element]);
 		}
 	}
-
+    delete [] multipole_coef;
 	return 0;
 }
 

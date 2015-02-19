@@ -20,6 +20,9 @@ void Charge_to_Multipole(Box & box, double *Charge, double *Charge_x, double *Ch
 
 
 void Multipole_to_Multipole(double old_x, double old_y, double old_z, double new_x, double new_y, double new_z, double *Old_M, double *New_M);
+void Multipole_to_Multipole(double old_x, double old_y, double old_z, double new_x, double new_y, double new_z, double * multipole_coef, double *Old_M, double *New_M);
+void multipole_to_multipole_coef(double boxsize, double * multipole_coef);
+void update_multipole_to_multipole_coef(double * multipole_coef);
 
 void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Multi_y, double Multi_z, double Local_x, double Local_y, double Local_z, double *M2L_translation);
 

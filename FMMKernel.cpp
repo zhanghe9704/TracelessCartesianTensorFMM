@@ -122,6 +122,88 @@ void Multipole_to_Multipole(double old_x, double old_y, double old_z, double new
 }
 
 
+void Multipole_to_Multipole(double old_x, double old_y, double old_z, double new_x, double new_y, double new_z, double * multipole_coef, double *Old_M, double *New_M)
+{
+	double coef;
+
+	int cnt = 0;
+
+	for (int i = 0; i < Number_of_total_element; i++)
+	{
+		int n1 = index_n1[i];
+		int n2 = index_n2[i];
+		int n3 = index_n3[i];
+
+		New_M[i] = 0;
+		for (int m1 = 0; m1 <= n1; m1++)
+		{
+			for (int m2 = 0; m2 <= n2; m2++)
+			{
+				for (int m3 = 0; m3 <= n3; m3++)
+				{
+				    coef = 1;
+					if (new_x<old_x) coef *= (1 - (m1 % 2) * 2);
+                    if (new_y<old_y) coef *= (1 - (m2 % 2) * 2);
+                    if (new_z<old_z) coef *= (1 - (m3 % 2) * 2);
+
+					New_M[i] += multipole_coef[cnt]*coef*Old_M[Find_index(n1 - m1, n2 - m2, n3 - m3)];
+					++cnt;
+				}
+			}
+		}
+	}
+}
+
+void multipole_to_multipole_coef(double boxsize, double * multipole_coef){
+    int cnt = 0;
+    for (int i = 0; i < Number_of_total_element; i++)
+	{
+		int n1 = index_n1[i];
+		int n2 = index_n2[i];
+		int n3 = index_n3[i];
+
+		int n = n1 + n2 + n3;
+
+		for (int m1 = 0; m1 <= n1; m1++)
+		{
+			for (int m2 = 0; m2 <= n2; m2++)
+			{
+				for (int m3 = 0; m3 <= n3; m3++)
+				{
+					int m = m1 + m2 + m3;
+					multipole_coef[cnt] = Factorial[n - m] / Factorial[n] * combination(n1, m1) * combination(n2, m2) * combination(n3, m3) * pow(0.5*boxsize, m);
+					++cnt;
+				}
+			}
+		}
+	}
+}
+
+void update_multipole_to_multipole_coef(double * multipole_coef){
+    int cnt = 0;
+    for (int i = 0; i < Number_of_total_element; i++)
+	{
+		int n1 = index_n1[i];
+		int n2 = index_n2[i];
+		int n3 = index_n3[i];
+
+		for (int m1 = 0; m1 <= n1; m1++)
+		{
+			for (int m2 = 0; m2 <= n2; m2++)
+			{
+				for (int m3 = 0; m3 <= n3; m3++)
+				{
+					int m = m1 + m2 + m3;
+					multipole_coef[cnt] *= pow(2,m);
+					++cnt;
+				}
+			}
+		}
+	}
+};
+
+
+
 void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Multi_y, double Multi_z, double Local_x, double Local_y, double Local_z, double *M2L_translation)
 {
 	//double x = Multi_x - Local_x;
