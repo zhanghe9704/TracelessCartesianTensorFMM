@@ -19,7 +19,7 @@ By He Huang & He Zhang, 12/29/2014
 //	return index;
 //}
 
-int Find_index(int n1, int n2, int n3){return find_index[n1][n2][n3]+n_Rank_Multipole_Start_Position[n1 + n2 + n3];}
+inline int Find_index(int n1, int n2, int n3){return find_index[n1][n2][n3]+n_Rank_Multipole_Start_Position[n1 + n2 + n3];}
 
 double combination(int n, int m)
 {
