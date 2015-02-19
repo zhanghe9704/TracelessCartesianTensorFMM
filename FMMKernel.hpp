@@ -27,13 +27,15 @@ void update_multipole_to_multipole_coef(double * multipole_coef);
 void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Multi_y, double Multi_z, double Local_x, double Local_y, double Local_z, double *M2L_translation);
 
 void Local_to_Local(double *Old_Local, double Old_x, double Old_y, double Old_z, double New_x, double New_y, double New_z, double *New_Local);
-
-//void Local_coef_length(int Max_rank);
+void Local_to_Local(double *Old_Local, double Old_x, double Old_y, double Old_z, double New_x, double New_y, double New_z, double * lOrigin_Rho_Tensor, double *New_Local);
+void Calc_Rho_Tensor(double boxsize, double * Rho_Tensor);
+void update_Rho_Tensor(double * Rho_Tensor);
 
 double MultipolePotential(double *Multipole, double Multi_x, double Multi_y, double Multi_z, double Poten_x, double Poten_y, double Poten_z);
 
 void Charge_to_Local(double charge_number, double *q, double *old_x, double *old_y, double *old_z, double new_x, double new_y, double new_z, double *L_expansion);
 void Charge_to_Local(Box &Box, unsigned long int * ptclist, double *q, double *old_x, double *old_y, double *old_z, double new_x, double new_y, double new_z, double *L_expansion);
+void Charge_to_Local_traceless(Box &box, unsigned long int * ptclist, double *q, double *old_x, double *old_y, double *old_z, double new_x, double new_y, double new_z, double *L_expansion);
 
 double LocalPotential(double *Local_expan, double Local_x, double Local_y, double Local_z, double observer_x, double observer_y, double observer_z);
 

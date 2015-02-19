@@ -240,73 +240,118 @@ void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Mult
 }
 
 
-void Local_coef_length(int Max_rank){
-    for(int n_Max_rank=0; n_Max_rank<Max_rank+1; ++n_Max_rank){
-        int cnt = 0;
-        for (int n = 0; n <= n_Max_rank; n++)
-        {
-            for (int m = n; m <= n_Max_rank; m++)
-            {
-                double Factor = combination(m, m - n);
-//	        		double *L2L_temp = scratch2;
-//                    memset(L2L_temp, 0, Number_of_total_element * sizeof(double));
-//                    Contraction_traceless(Old_Local, Rho_Tensor, L2L_temp, m, m - n);
-                int k = m - (m-n);
-                int m1, m2, m3, n1, n2, n3, k1, k2, k3;
-                int i, j;
+void Calc_Rho_Tensor(double boxsize, double * Rho_Tensor){
+    Symmetric_Tensor(0.25*boxsize, 0.25*boxsize, 0.25*boxsize, Rho_Tensor);
 
-                int Started_index_HL = n_Rank_Multipole_Start_Position[k];
-                int End_index_HL = n_Rank_Multipole_Start_Position[k + 1];
 
-                int Started_index_L = n_Rank_Multipole_Start_Position[n];
-                int End_index_L = n_Rank_Multipole_Start_Position[n + 1];
+    for(int ix=0; ix<2; ++ix){
+        for (int iy = 0; iy<2; ++iy){
+            for(int iz=0; iz<2; ++iz){
+                int shift = 0;
+                if(ix>0) shift += 4;
+                if(iy>0) shift += 2;
+                if(iz>0) shift += 1;
 
-                for (j = Started_index_HL; j < Started_index_HL + 2 * k + 1; j++)
-                {
-                    k1 = index_n1[j];
-                    k2 = index_n2[j];
-                    k3 = index_n3[j];
+                if(shift>0){
+                    for(int n=0; n<n_Max_rank+1; ++n){
+                        int coef, n1, n2, n3;
+                        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
+                            n1 = index_n1[i];
+                            n2 = index_n2[i];
+                            n3 = index_n3[i];
+                            coef = 1;
+                            if (ix>0)    coef *= (1 - (n1 % 2) * 2);
+                            if (iy>0)    coef *= (1 - (n2 % 2) * 2);
+                            if (iz>0)    coef *= (1 - (n3 % 2) * 2);
 
-                    for (i = Started_index_L; i < End_index_L; i++)
-                    {
-                        n1 = index_n1[i];
-                        n2 = index_n2[i];
-                        n3 = index_n3[i];
-
-                        m1 = k1 + n1;
-                        m2 = k2 + n2;
-                        m3 = k3 + n3;
-
-                        int index = Find_index(m1, m2, m3);
-                        ++cnt;
-
-//                            HL_rank_Tensor[j] += Factorial[n] / (Factorial[n1] * Factorial[n2] * Factorial[n3]) * High_rank_Tensor[index] * Low_rank_Tensor[i];
+                            Rho_Tensor[i+shift*Number_of_total_element] = coef*Rho_Tensor[i];
+                        }
                     }
                 }
-
-//                for (int j = Started_index_HL + 2 * k + 1; j < End_index_HL; j++)
-//                {
-//                    k1 = index_n1[j];
-//                    k2 = index_n2[j];
-//                    k3 = index_n3[j];
-//
-//                    ++cnt;
-//
-////                        int index_a = Find_index(k1 + 2, k2, k3 - 2);
-////                        int index_b = Find_index(k1, k2 + 2, k3 - 2);
-////
-////                        HL_rank_Tensor[j] = -HL_rank_Tensor[index_a] - HL_rank_Tensor[index_b];
-//                }
-
-//                    for (int i = n_Rank_Multipole_Start_Position[n]; i < n_Rank_Multipole_Start_Position[n + 1]; i++)
-//                    {
-//                        New_Local[i] += L2L_temp[i] * Factor;
-//                    }
             }
         }
-        cout<<n_Max_rank<<' '<<cnt<<endl;
-
     }
+}
+
+void update_Rho_Tensor(double * Rho_Tensor){
+    for(int n=0; n<n_Max_rank+1; ++n){
+        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
+                for(int j=0; j<8; ++j)   Rho_Tensor[i+j*Number_of_total_element] *= pow(0.5,n);
+        }
+    }
+}
+
+void Local_to_Local(double *Old_Local, double Old_x, double Old_y, double Old_z, double New_x, double New_y, double New_z, double * Origin_Rho_Tensor, double *New_Local)
+{
+	memset(New_Local, 0, Number_of_total_element * sizeof(double));
+
+	double *Rho_Tensor = scratch;
+//	memset(Rho_Tensor, 0, Number_of_total_element * sizeof(double));
+//	for(int n=0; n<n_Max_rank+1; ++n){
+//        int coef, n1, n2, n3;
+//        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
+//            n1 = index_n1[i];
+//            n2 = index_n2[i];
+//            n3 = index_n3[i];
+//            coef = 1;
+//            if (New_x<Old_x)    coef *= (1 - (n1 % 2) * 2);
+//            if (New_y<Old_y)    coef *= (1 - (n2 % 2) * 2);
+//            if (New_z<Old_z)    coef *= (1 - (n3 % 2) * 2);
+//
+//            Rho_Tensor[i] = coef*Origin_Rho_Tensor[i];
+//        }
+//    }
+
+    int shift = 0;
+    if (New_x<Old_x)    shift += 4;
+    if (New_y<Old_y)    shift += 2;
+    if (New_z<Old_z)    shift += 1;
+    memcpy ( Rho_Tensor, &Origin_Rho_Tensor[shift*Number_of_total_element], Number_of_total_element*sizeof(double) );
+
+//	double x = New_x - Old_x;
+//	double y = New_y - Old_y;
+//	double z = New_z - Old_z;
+//
+//	Symmetric_Tensor(x, y, z, Rho_Tensor);
+
+	double *L2L_temp = scratch2;
+	for (int n = 0; n <= n_Max_rank; n++)
+	{
+		for (int m = n; m <= n_Max_rank; m++)
+		{
+			double Factor = combination(m, m - n);
+//			double *L2L_temp = scratch2;
+			memset(L2L_temp, 0, Number_of_total_element * sizeof(double));
+			Contraction_traceless(Old_Local, Rho_Tensor, L2L_temp, m, m - n);
+
+//			for (int i = n_Rank_Multipole_Start_Position[n]; i < n_Rank_Multipole_Start_Position[n + 1]; i++)
+//			{
+//				New_Local[i] += L2L_temp[i] * Factor;
+//			}
+
+			for (int i = n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
+                New_Local[i] += L2L_temp[i] * Factor;
+			}
+		}
+	}
+
+	int n1, n2, n3;
+    for(int n=0; n<n_Max_rank+1; ++n){
+        int Start_index = n_Rank_Multipole_Start_Position[n];
+        int End_index = n_Rank_Multipole_Start_Position[n + 1];
+        for(int i=Start_index+2*n+1; i<End_index; ++i){
+            n1 = index_n1[i];
+            n2 = index_n2[i];
+            n3 = index_n3[i];
+
+            int index_a = Find_index(n1 + 2, n2, n3 - 2);
+            int index_b = Find_index(n1, n2 + 2, n3 - 2);
+
+            New_Local[i] = -New_Local[index_a] - New_Local[index_b];
+        }
+    }
+
+
 }
 
 void Local_to_Local(double *Old_Local, double Old_x, double Old_y, double Old_z, double New_x, double New_y, double New_z, double *New_Local)
@@ -380,6 +425,88 @@ void Charge_to_Local_pre(double q, double old_x, double old_y, double old_z, dou
 
 		L_expansion[i] = q * Nabla_1_element_r(n1, n2, n3, n, x, y, z, r_2, r_coe);
 	}
+}
+
+void Charge_to_Local_pre_traceless(double q, double old_x, double old_y, double old_z, double new_x, double new_y, double new_z, double *L_expansion)
+{
+	double x = old_x - new_x;
+	double y = old_y - new_y;
+	double z = old_z - new_z;
+
+    int n1, n2, n3;
+	for(int n=0; n<n_Max_rank+1; ++n){
+        int Start_index = n_Rank_Multipole_Start_Position[n];
+        int End_index = n_Rank_Multipole_Start_Position[n + 1];
+        for(int i=Start_index; i<Start_index+2*n+1; ++i){
+            n1 = index_n1[i];
+            n2 = index_n2[i];
+            n3 = index_n3[i];
+
+            int n = n1 + n2 + n3;
+            double r_2 = x * x + y * y + z * z;
+            double r_coe = (1 - (n % 2) * 2) / (pow(r_2, n) * sqrt(r_2));
+
+            L_expansion[i] = q * Nabla_1_element_r(n1, n2, n3, n, x, y, z, r_2, r_coe);
+        }
+        for(int i=Start_index+2*n+1; i<End_index; ++i){
+            n1 = index_n1[i];
+            n2 = index_n2[i];
+            n3 = index_n3[i];
+
+            int index_a = Find_index(n1 + 2, n2, n3 - 2);
+            int index_b = Find_index(n1, n2 + 2, n3 - 2);
+
+            L_expansion[i] = -L_expansion[index_a] - L_expansion[index_b];
+        }
+
+	}
+}
+
+void Charge_to_Local_traceless(Box &box, unsigned long int * ptclist, double *q, double *old_x, double *old_y, double *old_z, double new_x, double new_y, double new_z, double *L_expansion)
+{
+	double *temp_L = scratch;
+	memset(temp_L, 0, Number_of_total_element*sizeof(double));
+	memset(L_expansion, 0, Number_of_total_element*sizeof(double));
+
+    unsigned long int idx = box.first_ptcl;
+
+	for (unsigned int i = 0; i < box.n_ptcl; ++i)
+	{
+		Charge_to_Local_pre_traceless(q[idx], old_x[idx], old_y[idx], old_z[idx], new_x, new_y, new_z, temp_L);
+
+        for(int n=0; n<n_Max_rank+1; ++n){
+            int Start_index = n_Rank_Multipole_Start_Position[n];
+            for(int i=Start_index; i<Start_index+2*n+1; ++i){
+                L_expansion[i] += temp_L[i];
+            }
+        }
+        idx = ptclist[idx];
+	}
+
+    int n1, n2, n3;
+    for(int n=0; n<n_Max_rank+1; ++n){
+        int Start_index = n_Rank_Multipole_Start_Position[n];
+        int End_index = n_Rank_Multipole_Start_Position[n + 1];
+        for(int i=Start_index; i<Start_index+2*n+1; ++i){
+            n1 = index_n1[i];
+            n2 = index_n2[i];
+            n3 = index_n3[i];
+
+            int n = n1 + n2 + n3;
+            L_expansion[i] *= (1 - (n % 2) * 2) / Factorial[n];
+        }
+        for(int i=Start_index+2*n+1; i<End_index; ++i){
+            n1 = index_n1[i];
+            n2 = index_n2[i];
+            n3 = index_n3[i];
+
+            int index_a = Find_index(n1 + 2, n2, n3 - 2);
+            int index_b = Find_index(n1, n2 + 2, n3 - 2);
+
+            L_expansion[i] = -L_expansion[index_a] - L_expansion[index_b];
+        }
+    }
+
 }
 
 

@@ -66,6 +66,7 @@ double error(double * phi, double * phi_fmm, unsigned long int n){
     return sqrt(sum_dphi/sum_phi);
 }
 
+
 int main(){
 
 	unsigned long int N=1e4;

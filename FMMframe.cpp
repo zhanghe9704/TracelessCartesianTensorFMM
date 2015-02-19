@@ -104,6 +104,18 @@ int local_exp_from_parent(unsigned long int parent_idx, Box &parent_box, unsigne
     return 0;
 }
 
+int local_exp_from_parent(unsigned long int parent_idx, Box &parent_box, unsigned long int child_idx, Box &child_box, double * Rho_Tensor){
+    //use global local_expns.
+
+    //use the first n elements in local_expns as scratch
+    Local_to_Local(&local_expns[parent_idx*Number_of_total_element], parent_box.center[0], parent_box.center[1], parent_box.center[2], child_box.center[0], child_box.center[1], child_box.center[2], Rho_Tensor, local_expns);
+//    Local_to_Local(&local_expns[parent_idx*Number_of_total_element], parent_box.center[0], parent_box.center[1], parent_box.center[2], child_box.center[0], child_box.center[1], child_box.center[2], local_expns);
+    for(int i=0; i<Number_of_total_element; ++i){
+        local_expns[child_idx*Number_of_total_element+i] += local_expns[i];
+    }
+    return 0;
+}
+
 //Calculate the potential inside a childless box
 int Childless_box_potential(unsigned long int box_idx, Box &box, double * x, double * y, double * z, double * q, double * phi){
     //use global local_expns, ptclist.
@@ -129,7 +141,7 @@ int ill_separated(unsigned long int large_idx, Box &large_box, unsigned long int
     }
 
     //Calculate the local expansion inside the small box using the charges inside the large box
-    Charge_to_Local(large_box,ptclist,q,x,y,z,small_box.center[0],small_box.center[1],small_box.center[2],local_expns);
+    Charge_to_Local_traceless(large_box,ptclist,q,x,y,z,small_box.center[0],small_box.center[1],small_box.center[2],local_expns);
     for(int i=0; i<Number_of_total_element;++i){
         local_expns[small_idx*Number_of_total_element+i] += local_expns[i];
     }
@@ -291,11 +303,20 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
     //set zero for output potential
     memset(phi, 0, n_ptc*sizeof(double));
 
+    double * Rho_Tensor = new double[8*Number_of_total_element];
+    double current_parentbox_size = 0.5*tree[0].box_size;
+    Calc_Rho_Tensor(current_parentbox_size,Rho_Tensor);
+
+
     for(unsigned long int itr=1; itr<tree.size();++itr){
         unsigned long int parent_idx = tree[itr].parent;
 
         if(parent_idx>0){
-            local_exp_from_parent(parent_idx, tree[parent_idx], itr, tree[itr] );   //Inherit the local expansion from the parent box
+            if(tree[parent_idx].box_size<0.75*current_parentbox_size) {
+                    update_Rho_Tensor(Rho_Tensor);
+                    current_parentbox_size = tree[parent_idx].box_size;
+            }
+            local_exp_from_parent(parent_idx, tree[parent_idx], itr, tree[itr], Rho_Tensor);   //Inherit the local expansion from the parent box
             for(int i=0; clg[parent_idx].clg[i]>0;++i){     //Check all the child boxes of the colleagues of b's parent box
                 unsigned long int clg_idx = clg[parent_idx].clg[i];
                 check_colleague_child(tree, itr, clg_idx, x, y, z, q, phi);
@@ -313,6 +334,7 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
     }
 
     delete[] ptclist;
+    delete[] Rho_Tensor;
 	end_fmm();
 
 //	for(unsigned long int i=0; i<Number_of_particle;++i){
