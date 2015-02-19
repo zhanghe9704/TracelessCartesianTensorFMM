@@ -18,6 +18,7 @@ unsigned long int * ptclist;
 double * multipole_expns;
 double * local_expns;
 
+
 int configure_fmm(int Max_rank, unsigned long int n_ptc, unsigned long int n_box){
 
 	n_Max_rank = Max_rank;
@@ -41,6 +42,8 @@ int configure_fmm(int Max_rank, unsigned long int n_ptc, unsigned long int n_box
 	memset(local_expns, 0, n_box*Number_of_total_element*sizeof(double));
 
 
+
+
 	return 0;
 }
 
@@ -50,5 +53,6 @@ int end_fmm(){
 	delete[] multipole_expns;
 	delete[] local_expns;
 	delete[] scratch2;
+
 	return 0;
 }

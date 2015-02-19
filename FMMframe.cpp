@@ -7,7 +7,7 @@
 int calc_multipole(vector<Box> &tree, double * q, double * x, double * y, double * z){
     //use global ptclist, multipole_expns.
 
-    double *multipole_coef = new double[multipole_ceof_length[n_Max_rank+1]];
+    double multipole_coef = new double[multipole_coef_length[n_Max_rank+1]];
     double current_childbox_size = tree[tree.size()-1].box_size;
     multipole_to_multipole_coef(current_childbox_size, multipole_coef);
 
@@ -33,7 +33,7 @@ int calc_multipole(vector<Box> &tree, double * q, double * x, double * y, double
             Charge_to_Multipole(tree[itr], q, x, y, z, ptclist, &multipole_expns[itr*Number_of_total_element]);
 		}
 	}
-    delete [] multipole_coef;
+    delete[] multipole_coef;
 	return 0;
 }
 
@@ -290,7 +290,7 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
 
     //set zero for output potential
     memset(phi, 0, n_ptc*sizeof(double));
-
+    memset(multipole_coef, 0, multipole_coef_length[n_Max_rank+1]*sizeof(double));
     for(unsigned long int itr=1; itr<tree.size();++itr){
         unsigned long int parent_idx = tree[itr].parent;
 

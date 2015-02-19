@@ -240,6 +240,74 @@ void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Mult
 }
 
 
+void Local_coef_length(int Max_rank){
+    for(int n_Max_rank=0; n_Max_rank<Max_rank+1; ++n_Max_rank){
+        int cnt = 0;
+        for (int n = 0; n <= n_Max_rank; n++)
+        {
+            for (int m = n; m <= n_Max_rank; m++)
+            {
+                double Factor = combination(m, m - n);
+//	        		double *L2L_temp = scratch2;
+//                    memset(L2L_temp, 0, Number_of_total_element * sizeof(double));
+//                    Contraction_traceless(Old_Local, Rho_Tensor, L2L_temp, m, m - n);
+                int k = m - (m-n);
+                int m1, m2, m3, n1, n2, n3, k1, k2, k3;
+                int i, j;
+
+                int Started_index_HL = n_Rank_Multipole_Start_Position[k];
+                int End_index_HL = n_Rank_Multipole_Start_Position[k + 1];
+
+                int Started_index_L = n_Rank_Multipole_Start_Position[n];
+                int End_index_L = n_Rank_Multipole_Start_Position[n + 1];
+
+                for (j = Started_index_HL; j < Started_index_HL + 2 * k + 1; j++)
+                {
+                    k1 = index_n1[j];
+                    k2 = index_n2[j];
+                    k3 = index_n3[j];
+
+                    for (i = Started_index_L; i < End_index_L; i++)
+                    {
+                        n1 = index_n1[i];
+                        n2 = index_n2[i];
+                        n3 = index_n3[i];
+
+                        m1 = k1 + n1;
+                        m2 = k2 + n2;
+                        m3 = k3 + n3;
+
+                        int index = Find_index(m1, m2, m3);
+                        ++cnt;
+
+//                            HL_rank_Tensor[j] += Factorial[n] / (Factorial[n1] * Factorial[n2] * Factorial[n3]) * High_rank_Tensor[index] * Low_rank_Tensor[i];
+                    }
+                }
+
+//                for (int j = Started_index_HL + 2 * k + 1; j < End_index_HL; j++)
+//                {
+//                    k1 = index_n1[j];
+//                    k2 = index_n2[j];
+//                    k3 = index_n3[j];
+//
+//                    ++cnt;
+//
+////                        int index_a = Find_index(k1 + 2, k2, k3 - 2);
+////                        int index_b = Find_index(k1, k2 + 2, k3 - 2);
+////
+////                        HL_rank_Tensor[j] = -HL_rank_Tensor[index_a] - HL_rank_Tensor[index_b];
+//                }
+
+//                    for (int i = n_Rank_Multipole_Start_Position[n]; i < n_Rank_Multipole_Start_Position[n + 1]; i++)
+//                    {
+//                        New_Local[i] += L2L_temp[i] * Factor;
+//                    }
+            }
+        }
+        cout<<n_Max_rank<<' '<<cnt<<endl;
+
+    }
+}
 
 void Local_to_Local(double *Old_Local, double Old_x, double Old_y, double Old_z, double New_x, double New_y, double New_z, double *New_Local)
 {

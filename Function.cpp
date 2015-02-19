@@ -10,14 +10,16 @@ By He Huang & He Zhang, 12/29/2014
 
 #include "head.hpp"
 
-int Find_index(int n1, int n2, int n3)
-{
-	int n = n1 + n2 + n3;
-	int index = n2 + (2 * n + 3 - n3)* n3 / 2;  // c++ index starting from 0
+//int Find_index(int n1, int n2, int n3)
+//{
+//	int n = n1 + n2 + n3;
+//	int index = n2 + (2 * n + 3 - n3)* n3 / 2;  // c++ index starting from 0
+//
+//	index = index + n_Rank_Multipole_Start_Position[n];
+//	return index;
+//}
 
-	index = index + n_Rank_Multipole_Start_Position[n];
-	return index;
-}
+int Find_index(int n1, int n2, int n3){return find_index[n1][n2][n3]+n_Rank_Multipole_Start_Position[n1 + n2 + n3];}
 
 double combination(int n, int m)
 {
@@ -97,7 +99,7 @@ void Nabla_r_traceless(double end_x, double end_y, double end_z, double begin_x,
 	double x = end_x - begin_x;
 	double y = end_y - begin_y;
 	double z = end_z - begin_z;
-	
+
 	for (int rank_n = 0; rank_n <= n_Max_rank; rank_n++)
 	{
 		for (int j = 0; j < (2 * rank_n + 1); j++)
@@ -139,7 +141,7 @@ void Contraction(double *High_rank_Tensor, double *Low_rank_Tensor, double *HL_r
 
 	memset(HL_rank_Tensor, 0, Number_of_total_element*sizeof(double));
 
-	//	started index and End index 
+	//	started index and End index
 	int Started_index_HL = n_Rank_Multipole_Start_Position[k];
 	int End_index_HL = n_Rank_Multipole_Start_Position[k + 1];
 
@@ -178,7 +180,7 @@ void Contraction_traceless(double *High_rank_Tensor, double *Low_rank_Tensor, do
 
 	memset(HL_rank_Tensor, 0, Number_of_total_element*sizeof(double));
 
-	//	started index and End index 
+	//	started index and End index
 	int Started_index_HL = n_Rank_Multipole_Start_Position[k];
 	int End_index_HL = n_Rank_Multipole_Start_Position[k + 1];
 

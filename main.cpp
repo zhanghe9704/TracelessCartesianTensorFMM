@@ -68,6 +68,9 @@ double error(double * phi, double * phi_fmm, unsigned long int n){
 
 int main(){
 
+    Local_coef_length(22);
+    return 0;
+
 	unsigned long int N=1e4;
 	unsigned long int N_calc = 1000;
 	int n_ptc_box = 100;
