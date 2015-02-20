@@ -25,6 +25,9 @@ void multipole_to_multipole_coef(double boxsize, double * multipole_coef);
 void update_multipole_to_multipole_coef(double * multipole_coef);
 
 void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Multi_y, double Multi_z, double Local_x, double Local_y, double Local_z, double *M2L_translation);
+void Calc_Nabla_R(double boxsize, double * Nabla_R);
+void update_Nabla_R(double * Nabla_R);
+void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Multi_y, double Multi_z, double Local_x, double Local_y, double Local_z, double * Saved_Nabla_R, double boxsize, double *M2L_translation);
 
 void Local_to_Local(double *Old_Local, double Old_x, double Old_y, double Old_z, double New_x, double New_y, double New_z, double *New_Local);
 void Local_to_Local(double *Old_Local, double Old_x, double Old_y, double Old_z, double New_x, double New_y, double New_z, double * lOrigin_Rho_Tensor, double *New_Local);

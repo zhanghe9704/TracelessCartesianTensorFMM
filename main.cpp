@@ -69,10 +69,10 @@ double error(double * phi, double * phi_fmm, unsigned long int n){
 
 int main(){
 
-	unsigned long int N=1e4;
+	unsigned long int N=256000;
 	unsigned long int N_calc = 1000;
-	int n_ptc_box = 100;
-    int n_rank = 3;
+	int n_ptc_box = 1000;
+    int n_rank = 6;
 
 	double * x = new double[N];
 	double * y = new double[N];
@@ -81,26 +81,26 @@ int main(){
 	double * phi = new double[N];
 	double * phi_check = new double[N];
 
-//	 Generate random particle positions.
-//	srand (time(NULL));
-//	for(unsigned long int i=0;i<N;++i){
-//		x[i] = rand();
-//		y[i] = rand();
-//		z[i] = rand();
-//		q[i] = 1;
-//	}
+////	 Generate random particle positions.
+	srand (time(NULL));
+	for(unsigned long int i=0;i<N;++i){
+		x[i] = rand();
+		y[i] = rand();
+		z[i] = rand();
+		q[i] = 1;
+	}
 
-//  normal distribution.
-    // obtain a seed from the timer
-    std::default_random_engine generator;
-    generator.seed(time(NULL));
-    std::normal_distribution<double> distribution(0.0,1.0);
-    for(unsigned long int i=0;i<N;++i){
-        x[i] = distribution(generator);
-        y[i] = distribution(generator);
-        z[i] = distribution(generator);
-        q[i] = 1;
-    }
+////  normal distribution.
+//    // obtain a seed from the timer
+//    std::default_random_engine generator;
+//    generator.seed(time(NULL));
+//    std::normal_distribution<double> distribution(0.0,1.0);
+//    for(unsigned long int i=0;i<N;++i){
+//        x[i] = distribution(generator);
+//        y[i] = distribution(generator);
+//        z[i] = distribution(generator);
+//        q[i] = 1;
+//    }
 
 	scale(x, N);
 	scale(y, N);
@@ -126,13 +126,33 @@ int main(){
 //    }
 //    infile.close();
 
-    cout<<"Calculate the first "<<N_calc<<" particles by the pairwise Coulomb formula!"<<endl;
-    Coulomb(x,y,z,q,N,N_calc,phi_check);
+    std::chrono::steady_clock::time_point start, end;
 
+    cout<<"Calculate the first "<<N_calc<<" particles by the pairwise Coulomb formula!"<<endl;
+    start = std::chrono::steady_clock::now();
+    Coulomb(x,y,z,q,N,N_calc,phi_check);
+    end = std::chrono::steady_clock::now();
+    auto t1 = 0.001*std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    cout<<"Coulomb formula: "<<t1<<' '<<N/N_calc*t1<<endl;
 
     cout<<"start FMM"<<endl;
+    start = std::chrono::steady_clock::now();
     fmm(x,  y,  z,  q, N, n_rank, n_ptc_box, phi);
+    end = std::chrono::steady_clock::now();
+    auto t3 = 0.001*std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    cout<<"FMM: "<<t3<<endl;
     cout<<"end FMM"<<endl;
+    cout<<"FMM/Coulomb: "<<t3/(N/N_calc*t1)<<endl;
+
+//    cout<<"Calculate "<<N<<" particles by the pairwise Coulomb formula!"<<endl;
+//    start = std::chrono::steady_clock::now();
+//    Coulomb(x,y,z,q,N,N,phi_check);
+//    end = std::chrono::steady_clock::now();
+//    auto t2 = 0.001*std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+//    cout<<"Coulomb formula: "<<t2<<endl;
+//
+//
+//    cout<<"FMM/Coulomb: "<<t3/t2<<endl;
 
 //    char filename2[30] = "checkphi.txt";
 //    std::ofstream output;

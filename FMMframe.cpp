@@ -78,12 +78,25 @@ int Coulomb_potential(Box &obj_box, Box &src_box, double * x, double * y, double
 }
 
 //Convert the multipole expansion into local expansion inside each other for two well separated boxes
-int well_separated(unsigned long int obj_idx, Box &obj_box, unsigned long int src_idx, Box &src_box){
+int well_separated(unsigned long int obj_idx, Box &obj_box, unsigned long int src_idx, Box &src_box, double boxsize, double * Nabla_R){
     //use global local_expns, multipole_expns.
 
+    double * check1 = new double[Number_of_total_element];
+    double * check2 = new double[Number_of_total_element];
+
     //use the first n elements in local_expns and multipole_expns as scratch
-    Multipole_to_Local(&multipole_expns[obj_idx*Number_of_total_element], obj_box.center[0], obj_box.center[1], obj_box.center[2],src_box.center[0],src_box.center[1],src_box.center[2],local_expns);
-    Multipole_to_Local(&multipole_expns[src_idx*Number_of_total_element], src_box.center[0], src_box.center[1], src_box.center[2],obj_box.center[0],obj_box.center[1],obj_box.center[2],multipole_expns);
+//    Multipole_to_Local(&multipole_expns[obj_idx*Number_of_total_element], obj_box.center[0], obj_box.center[1], obj_box.center[2],src_box.center[0],src_box.center[1],src_box.center[2],local_expns);
+//    Multipole_to_Local(&multipole_expns[src_idx*Number_of_total_element], src_box.center[0], src_box.center[1], src_box.center[2],obj_box.center[0],obj_box.center[1],obj_box.center[2],multipole_expns);
+////
+//    Multipole_to_Local(&multipole_expns[obj_idx*Number_of_total_element], obj_box.center[0], obj_box.center[1], obj_box.center[2],src_box.center[0],src_box.center[1],src_box.center[2], Nabla_R, boxsize, check1);
+//    Multipole_to_Local(&multipole_expns[src_idx*Number_of_total_element], src_box.center[0], src_box.center[1], src_box.center[2],obj_box.center[0],obj_box.center[1],obj_box.center[2], Nabla_R, boxsize, check2);
+////
+    Multipole_to_Local(&multipole_expns[obj_idx*Number_of_total_element], obj_box.center[0], obj_box.center[1], obj_box.center[2],src_box.center[0],src_box.center[1],src_box.center[2], Nabla_R, boxsize, local_expns);
+    Multipole_to_Local(&multipole_expns[src_idx*Number_of_total_element], src_box.center[0], src_box.center[1], src_box.center[2],obj_box.center[0],obj_box.center[1],obj_box.center[2], Nabla_R, boxsize, multipole_expns);
+
+//    for (int i=0; i<Number_of_total_element; ++i) if(local_expns[i]-check1[i]>1e-10) cout<<obj_idx<<' '<<src_idx<<endl;
+    delete[] check1;
+    delete[] check2;
 
     for (int i=0; i<Number_of_total_element; ++i){
         local_expns[src_idx*Number_of_total_element+i] += local_expns[i];
@@ -185,7 +198,7 @@ int check_descent(vector<Box> &tree, unsigned long int childless_idx, Box &child
 }
 
 //check the relation between box itr and the descent of box clg_idx
-int check_colleague_child(vector<Box> &tree, unsigned long int itr, unsigned long int clg_idx, double * x, double * y, double * z, double * q, double * phi){
+int check_colleague_child(vector<Box> &tree, unsigned long int itr, unsigned long int clg_idx, double &current_boxsize, double * Nabla_R, double * x, double * y, double * z, double * q, double * phi){
 
             for(int j=0; j<tree[clg_idx].n_child;++j){
                 unsigned long int clg_child_idx = tree[clg_idx].child[j];
@@ -211,7 +224,12 @@ int check_colleague_child(vector<Box> &tree, unsigned long int itr, unsigned lon
                         break;
                     }
                     case 2:{    //These two boxes are well separated.
-                        well_separated(itr, tree[itr], clg_child_idx, tree[clg_child_idx]);
+                        if(tree[itr].box_size<0.75*current_boxsize){
+                            update_Nabla_R(Nabla_R);
+                            current_boxsize = tree[itr].box_size;
+                        }
+//                        well_separated(itr, tree[itr], clg_child_idx, tree[clg_child_idx]);
+                        well_separated(itr, tree[itr], clg_child_idx, tree[clg_child_idx], current_boxsize, Nabla_R);
                         break;
                     }
                     default:
@@ -307,6 +325,10 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
     double current_parentbox_size = 0.5*tree[0].box_size;
     Calc_Rho_Tensor(current_parentbox_size,Rho_Tensor);
 
+    double * Nabla_R = new double[16*Number_of_total_element];
+    double  current_boxsize = 0.25*tree[0].box_size;
+    Calc_Nabla_R(current_boxsize,Nabla_R);
+
 
     for(unsigned long int itr=1; itr<tree.size();++itr){
         unsigned long int parent_idx = tree[itr].parent;
@@ -319,11 +341,11 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
             local_exp_from_parent(parent_idx, tree[parent_idx], itr, tree[itr], Rho_Tensor);   //Inherit the local expansion from the parent box
             for(int i=0; clg[parent_idx].clg[i]>0;++i){     //Check all the child boxes of the colleagues of b's parent box
                 unsigned long int clg_idx = clg[parent_idx].clg[i];
-                check_colleague_child(tree, itr, clg_idx, x, y, z, q, phi);
+                check_colleague_child(tree, itr, clg_idx, current_boxsize, Nabla_R, x, y, z, q, phi);
             }
         }
         else{
-            check_colleague_child(tree, itr, parent_idx, x, y, z, q, phi);
+            check_colleague_child(tree, itr, parent_idx, current_boxsize, Nabla_R, x, y, z, q, phi);
         }
 
         if(tree[itr].n_child==0){
@@ -335,6 +357,7 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
 
     delete[] ptclist;
     delete[] Rho_Tensor;
+    delete[] Nabla_R;
 	end_fmm();
 
 //	for(unsigned long int i=0; i<Number_of_particle;++i){

@@ -17,7 +17,21 @@ double * scratch2;
 unsigned long int * ptclist;
 double * multipole_expns;
 double * local_expns;
+int nabla_idx[4][4][2]={0};
 
+
+int calc_nabla_idx(){
+    int shift = 0;
+    for(int i3=2; i3<4; ++i3){
+        for(int i2=0; i2<i3+1; ++i2){
+            for(int i1=0; i1<i2+1; ++i1){
+                nabla_idx[i1][i2][i3-2] = shift;
+                ++shift;
+            }
+        }
+    }
+    return 0;
+}
 
 int configure_fmm(int Max_rank, unsigned long int n_ptc, unsigned long int n_box){
 
@@ -41,7 +55,7 @@ int configure_fmm(int Max_rank, unsigned long int n_ptc, unsigned long int n_box
 	local_expns = new double[n_box*Number_of_total_element];
 	memset(local_expns, 0, n_box*Number_of_total_element*sizeof(double));
 
-
+    calc_nabla_idx();
 
 
 	return 0;

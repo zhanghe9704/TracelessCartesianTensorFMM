@@ -85,7 +85,6 @@ void Charge_to_Multipole(Box & box, double *Charge, double *Charge_x, double *Ch
 
 
 
-
 void Multipole_to_Multipole(double old_x, double old_y, double old_z, double new_x, double new_y, double new_z, double *Old_M, double *New_M)
 {
 	double x = new_x - old_x;
@@ -124,7 +123,7 @@ void Multipole_to_Multipole(double old_x, double old_y, double old_z, double new
 
 void Multipole_to_Multipole(double old_x, double old_y, double old_z, double new_x, double new_y, double new_z, double * multipole_coef, double *Old_M, double *New_M)
 {
-	double coef;
+	int coef;
 
 	int cnt = 0;
 
@@ -202,7 +201,147 @@ void update_multipole_to_multipole_coef(double * multipole_coef){
 	}
 };
 
+void Calc_Nabla_R(double boxsize, double * Nabla_R){
+//    double * tmp = new double[Number_of_total_element];
+//    Nabla_r_traceless(boxsize, boxsize, boxsize, tmp);
+    int shift;
+    for(int i3=2; i3<4; ++i3){
+        for(int i2=0; i2<i3+1; ++i2){
+            for(int i1=0; i1<i2+1; ++i1){
+                shift = nabla_idx[i1][i2][i3-2];
+                Nabla_r_traceless(i1*boxsize, i2*boxsize, i3*boxsize, &Nabla_R[shift*Number_of_total_element]);
+            }
+        }
+    }
+//    delete[] tmp;
+}
 
+void update_Nabla_R(double * Nabla_R){
+    for(int n=0; n<n_Max_rank+1; ++n){
+        double k = pow(2,n+1);
+        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
+                for(int j=0; j<16; ++j)   Nabla_R[i+j*Number_of_total_element] *= k;
+        }
+    }
+}
+
+
+
+void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Multi_y, double Multi_z, double Local_x, double Local_y, double Local_z, double * Saved_Nabla_R, double boxsize, double *M2L_translation)
+{
+	//double x = Multi_x - Local_x;
+	//double y = Multi_y - Local_y;
+	//double z = Multi_z - Local_z;
+
+	int idx[3], seq[3];
+	int sign[3] = {1,1,1};
+
+	if (Local_x<Multi_x) sign[0] = -1;
+	if (Local_y<Multi_y) sign[1] = -1;
+	if (Local_z<Multi_z) sign[2] = -1;
+
+	idx[0] = round((Local_x-Multi_x)*sign[0]/boxsize);
+	idx[1] = round((Local_y-Multi_y)*sign[1]/boxsize);
+	idx[2] = round((Local_z-Multi_z)*sign[2]/boxsize);
+
+	int change = sequence3(idx,seq);
+	int shift = nabla_idx[idx[seq[0]]][idx[seq[1]]][idx[seq[2]]-2];
+
+    double *Nabla_R = scratch2;
+//    memset(Nabla_R, 0, Number_of_total_element*sizeof(double));
+    if (change==0) {
+        for(int n=0; n<=n_Max_rank;++n){
+            int coef, n1, n2, n3;
+            for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
+                n1 = index_n1[i];
+                n2 = index_n2[i];
+                n3 = index_n3[i];
+                coef = 1;
+                if (n1%2==1)    coef *= sign[0];
+                if (n2%2==1)    coef *= sign[1];
+                if (n3%2==1)    coef *= sign[2];
+                Nabla_R[i] = coef*Saved_Nabla_R[shift*Number_of_total_element+i];
+            }
+        }
+    }
+
+    if (change>0) {
+        for(int n=0; n<=n_Max_rank;++n){
+            int coef, index, ni[3];
+            for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
+                ni[0] = index_n1[i];
+                ni[1] = index_n2[i];
+                ni[2] = index_n3[i];
+                index = Find_index(ni[seq[0]],ni[seq[1]], ni[seq[2]]);
+
+                coef = 1;
+                if (ni[0]%2==1)    coef *= sign[0];
+                if (ni[1]%2==1)    coef *= sign[1];
+                if (ni[2]%2==1)    coef *= sign[2];
+                Nabla_R[i] = coef*Saved_Nabla_R[shift*Number_of_total_element+index];
+            }
+        }
+    }
+
+    for(int n=0; n<=n_Max_rank; ++n){
+        int n1, n2, n3, index_a, index_b;
+        for(int i=n_Rank_Multipole_Start_Position[n]+2*n+1; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
+            n1 = index_n1[i];
+            n2 = index_n2[i];
+            n3 = index_n3[i];
+
+            index_a = Find_index(n1 + 2, n2, n3 - 2);
+            index_b = Find_index(n1, n2 + 2, n3 - 2);
+
+            Nabla_R[i] = -Nabla_R[index_a] - Nabla_R[index_b];
+
+        }
+    }
+
+	memset(M2L_translation, 0, Number_of_total_element*sizeof(double));
+
+	double *M2L_temp = scratch;
+	memset(M2L_temp, 0, Number_of_total_element*sizeof(double));
+	for (int k = 0; k <= n_Max_rank; k++)
+	{
+		for (int l = 0; l <= n_Max_rank - k; l++)
+		{
+			Contraction_traceless(Nabla_R, Multipole_for_trans, M2L_temp, l + k, l);
+//			for (int i = n_Rank_Multipole_Start_Position[k]; i < n_Rank_Multipole_Start_Position[k + 1]; i++)
+            for (int i = n_Rank_Multipole_Start_Position[k]; i < n_Rank_Multipole_Start_Position[k]+2*k+1; ++i)
+			{
+				M2L_translation[i] += M2L_temp[i];
+			}
+		}
+	}
+
+	for(int n=0; n<=n_Max_rank; ++n){
+        int n1, n2, n3, index_a, index_b;
+        double coef = 1/Factorial[n];
+        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
+            M2L_translation[i] = M2L_translation[i]*coef;
+        }
+
+        for(int i=n_Rank_Multipole_Start_Position[n]+2*n+1; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
+            n1 = index_n1[i];
+            n2 = index_n2[i];
+            n3 = index_n3[i];
+
+            index_a = Find_index(n1 + 2, n2, n3 - 2);
+            index_b = Find_index(n1, n2 + 2, n3 - 2);
+
+            M2L_translation[i] = -M2L_translation[index_a] - M2L_translation[index_b];
+        }
+	}
+
+//
+//	for (int i = 0; i < Number_of_total_element; i++)
+//	{
+//		int n = index_n1[i] + index_n2[i] + index_n3[i];
+//		M2L_translation[i] = M2L_translation[i] / Factorial[n];
+//	}
+
+}
 
 void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Multi_y, double Multi_z, double Local_x, double Local_y, double Local_z, double *M2L_translation)
 {
@@ -275,8 +414,9 @@ void Calc_Rho_Tensor(double boxsize, double * Rho_Tensor){
 
 void update_Rho_Tensor(double * Rho_Tensor){
     for(int n=0; n<n_Max_rank+1; ++n){
+        double k = pow(0.5,n);
         for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
-                for(int j=0; j<8; ++j)   Rho_Tensor[i+j*Number_of_total_element] *= pow(0.5,n);
+                for(int j=0; j<8; ++j)   Rho_Tensor[i+j*Number_of_total_element] *= k;
         }
     }
 }
@@ -335,7 +475,7 @@ void Local_to_Local(double *Old_Local, double Old_x, double Old_y, double Old_z,
 		}
 	}
 
-	int n1, n2, n3;
+	int n1, n2, n3, index_a, index_b;
     for(int n=0; n<n_Max_rank+1; ++n){
         int Start_index = n_Rank_Multipole_Start_Position[n];
         int End_index = n_Rank_Multipole_Start_Position[n + 1];
@@ -344,8 +484,8 @@ void Local_to_Local(double *Old_Local, double Old_x, double Old_y, double Old_z,
             n2 = index_n2[i];
             n3 = index_n3[i];
 
-            int index_a = Find_index(n1 + 2, n2, n3 - 2);
-            int index_b = Find_index(n1, n2 + 2, n3 - 2);
+            index_a = Find_index(n1 + 2, n2, n3 - 2);
+            index_b = Find_index(n1, n2 + 2, n3 - 2);
 
             New_Local[i] = -New_Local[index_a] - New_Local[index_b];
         }

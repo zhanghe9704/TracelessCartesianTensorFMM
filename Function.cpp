@@ -19,7 +19,29 @@ By He Huang & He Zhang, 12/29/2014
 //	return index;
 //}
 
-inline int Find_index(int n1, int n2, int n3){return find_index[n1][n2][n3]+n_Rank_Multipole_Start_Position[n1 + n2 + n3];}
+int Find_index(int n1, int n2, int n3){return find_index[n1][n2][n3]+n_Rank_Multipole_Start_Position[n1 + n2 + n3];}
+
+//output i3>=i2>=i1, if sequence changed return a number greater than 0;
+int sequence3(int x1, int x2, int x3, int &i1, int &i2, int &i3){
+    int change = 0;
+    i1 = x1;
+    i2 = x2;
+    i3 = x3;
+    if (x2>i3) {i2 = i3; i3 = x2; ++change;}
+    if (x1>i3) {i1 = i3; i3 = x1; ++change;}
+    if  (i1>i2) { int tmp = i1; i1 = i2; i2 = tmp; ++change;}
+
+    return change;
+}
+
+int sequence3 (int x[3], int idx[3]){
+    int change = 0;
+    for (int i=0; i<3; ++i) idx[i] = i;
+    if (x[1]>x[2])  {idx[2]=1; idx[1]=2; ++change; }
+    if (x[0]>x[idx[2]]) {idx[0]=idx[2]; idx[2]=0; ++change;}
+    if (x[idx[0]]>x[idx[1]]) { int tmp = idx[0]; idx[0] = idx[1]; idx[1] = tmp; ++change;}
+    return change;
+}
 
 double combination(int n, int m)
 {
@@ -131,6 +153,42 @@ void Nabla_r_traceless(double end_x, double end_y, double end_z, double begin_x,
 		}
 	}
 }
+
+
+void Nabla_r_traceless(double x, double y, double z, double *Nabla_R)
+{
+	for (int rank_n = 0; rank_n <= n_Max_rank; rank_n++)
+	{
+		for (int j = 0; j < (2 * rank_n + 1); j++)
+		{
+			int n1, n2, n3;
+			n1 = index_n1[n_Rank_Multipole_Start_Position[rank_n] + j];
+			n2 = index_n2[n_Rank_Multipole_Start_Position[rank_n] + j];
+			n3 = index_n3[n_Rank_Multipole_Start_Position[rank_n] + j];
+
+			double r_2 = x*x + y*y + z*z;
+			double r_coe = (1 - (rank_n % 2) * 2) / pow(r_2, rank_n) / sqrt(r_2);
+
+			double temp = Nabla_1_element_r(n1, n2, n3, rank_n, x, y, z, r_2, r_coe);
+
+			Nabla_R[n_Rank_Multipole_Start_Position[rank_n] + j] = temp;
+		}
+
+		for (int j = 2 * rank_n + 1; j < (rank_n + 1)*(rank_n + 2) / 2; j++)
+		{
+			int n1, n2, n3;
+			n1 = index_n1[j + n_Rank_Multipole_Start_Position[rank_n]];
+			n2 = index_n2[j + n_Rank_Multipole_Start_Position[rank_n]];
+			n3 = index_n3[j + n_Rank_Multipole_Start_Position[rank_n]];
+
+			int index_a = Find_index(n1 + 2, n2, n3 - 2);
+			int index_b = Find_index(n1, n2 + 2, n3 - 2);
+
+			Nabla_R[j + n_Rank_Multipole_Start_Position[rank_n]] = -Nabla_R[index_a] - Nabla_R[index_b];
+		}
+	}
+}
+
 
 void Contraction(double *High_rank_Tensor, double *Low_rank_Tensor, double *HL_rank_Tensor, int m, int n)
 {
