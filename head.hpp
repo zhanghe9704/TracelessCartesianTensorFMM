@@ -32,7 +32,8 @@ extern double *scratch2;
 extern unsigned long int *ptclist;
 extern double * multipole_expns;
 extern double * local_expns;
-extern int nabla_idx[4][4][2];
+extern double * combination_coef;
+extern double * Nabla_1_element_r_coef;
 
 
 #endif

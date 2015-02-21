@@ -1,13 +1,10 @@
 #include "head.hpp"
 
-#include <fstream>
-
-
 //Calculate the multipole expansions for all boxes except for the root box
 int calc_multipole(vector<Box> &tree, double * q, double * x, double * y, double * z){
     //use global ptclist, multipole_expns.
 
-    double * multipole_coef = new double[multipole_coef_length[n_Max_rank+1]];
+    double * multipole_coef = new double[multipole_coef_length[n_Max_rank]];
     double current_childbox_size = tree[tree.size()-1].box_size;
     multipole_to_multipole_coef(current_childbox_size, multipole_coef);
 
@@ -16,7 +13,6 @@ int calc_multipole(vector<Box> &tree, double * q, double * x, double * y, double
                 for (int i=0; i<tree[itr].n_child; ++i){
                         unsigned long int child_ptr = tree[itr].child[i];
 ////                        Translate the mltp of a child box to the parent box, use the first Number_of_total_element number of multipoles as scratch variable
-//                        Multipole_to_Multipole(tree[child_ptr].center[0],tree[child_ptr].center[1],tree[child_ptr].center[2],tree[itr].center[0],tree[itr].center[1],tree[itr].center[2], &multipole_expns[child_ptr*Number_of_total_element], multipole_expns );
                         if (tree[child_ptr].box_size>1.5*current_childbox_size){
                             update_multipole_to_multipole_coef(multipole_coef);
                             current_childbox_size = tree[child_ptr].box_size;
@@ -28,8 +24,6 @@ int calc_multipole(vector<Box> &tree, double * q, double * x, double * y, double
                 }
 		}
 		else{	//childless box, calculate the multipole expansion from the charges
-//            Box & box = tree[itr];
-//            Charge_to_Multipole(box, q, x, y, z, ptclist, &multipole_expns[itr*Number_of_total_element]);
             Charge_to_Multipole(tree[itr], q, x, y, z, ptclist, &multipole_expns[itr*Number_of_total_element]);
 		}
 	}
@@ -81,38 +75,13 @@ int Coulomb_potential(Box &obj_box, Box &src_box, double * x, double * y, double
 int well_separated(unsigned long int obj_idx, Box &obj_box, unsigned long int src_idx, Box &src_box, double boxsize, double * Nabla_R){
     //use global local_expns, multipole_expns.
 
-    double * check1 = new double[Number_of_total_element];
-    double * check2 = new double[Number_of_total_element];
-
     //use the first n elements in local_expns and multipole_expns as scratch
-//    Multipole_to_Local(&multipole_expns[obj_idx*Number_of_total_element], obj_box.center[0], obj_box.center[1], obj_box.center[2],src_box.center[0],src_box.center[1],src_box.center[2],local_expns);
-//    Multipole_to_Local(&multipole_expns[src_idx*Number_of_total_element], src_box.center[0], src_box.center[1], src_box.center[2],obj_box.center[0],obj_box.center[1],obj_box.center[2],multipole_expns);
-////
-//    Multipole_to_Local(&multipole_expns[obj_idx*Number_of_total_element], obj_box.center[0], obj_box.center[1], obj_box.center[2],src_box.center[0],src_box.center[1],src_box.center[2], Nabla_R, boxsize, check1);
-//    Multipole_to_Local(&multipole_expns[src_idx*Number_of_total_element], src_box.center[0], src_box.center[1], src_box.center[2],obj_box.center[0],obj_box.center[1],obj_box.center[2], Nabla_R, boxsize, check2);
-////
     Multipole_to_Local(&multipole_expns[obj_idx*Number_of_total_element], obj_box.center[0], obj_box.center[1], obj_box.center[2],src_box.center[0],src_box.center[1],src_box.center[2], Nabla_R, boxsize, local_expns);
     Multipole_to_Local(&multipole_expns[src_idx*Number_of_total_element], src_box.center[0], src_box.center[1], src_box.center[2],obj_box.center[0],obj_box.center[1],obj_box.center[2], Nabla_R, boxsize, multipole_expns);
-
-//    for (int i=0; i<Number_of_total_element; ++i) if(local_expns[i]-check1[i]>1e-10) cout<<obj_idx<<' '<<src_idx<<endl;
-    delete[] check1;
-    delete[] check2;
 
     for (int i=0; i<Number_of_total_element; ++i){
         local_expns[src_idx*Number_of_total_element+i] += local_expns[i];
         local_expns[obj_idx*Number_of_total_element+i] += multipole_expns[i];
-    }
-    return 0;
-}
-
-//Transfer the local expansion to the child box from its parent box
-int local_exp_from_parent(unsigned long int parent_idx, Box &parent_box, unsigned long int child_idx, Box &child_box){
-    //use global local_expns.
-
-    //use the first n elements in local_expns as scratch
-    Local_to_Local(&local_expns[parent_idx*Number_of_total_element], parent_box.center[0], parent_box.center[1], parent_box.center[2], child_box.center[0], child_box.center[1], child_box.center[2], local_expns);
-    for(int i=0; i<Number_of_total_element; ++i){
-        local_expns[child_idx*Number_of_total_element+i] += local_expns[i];
     }
     return 0;
 }
@@ -253,70 +222,13 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
 	ptclist = new unsigned long int[n_ptc];
 	memset(ptclist, 0, n_ptc*sizeof(unsigned long int));
 
-
-
-
 	create_tree(x,y,z,n_ptc, n_ptc_box, tree, ptclist);
 
     configure_fmm(max_rank, n_ptc, tree.size());
-//	output<<n_Max_rank<<' '<<Number_of_total_element<<endl;
-//
-//	for(unsigned long int i=0; i<n_ptc; ++i){
-//		output<<i<<' '<<ptclist[i]<<' '<<x[i]<<' '<<y[i]<<' '<<z[i]<<endl;
-//	}
-//
-//	int i=0;
-//	for(auto itr=tree.begin(); itr!=tree.end(); ++itr){
-//		output<<i<<' '<<*itr<<endl;
-//		++i;
-//	}
-////
-//	output<<clg.size()<<endl;
 
 	create_colleague(tree, clg);
-//	output<<clg.size()<<endl;
-//
-//
-//	output<<endl;
-//	for(unsigned long int i=0; i<clg.size(); ++i){
-//		output<<clg[i];
-//	}
-
-
 
     calc_multipole(tree, q, x, y, z);
-
-//    //check multipole calculation
-//
-//    unsigned long int box_idx = 54;
-//    double * xx = new double[tree[box_idx].n_ptcl];
-//    double * yy = new double[tree[box_idx].n_ptcl];
-//    double * zz = new double[tree[box_idx].n_ptcl];
-//    double * qq = new double[tree[box_idx].n_ptcl];
-//    unsigned long int ptc_idx = tree[box_idx].first_ptcl;
-//    for(int i=0; i<tree[box_idx].n_ptcl; ++i){
-//        xx[i] = x[ptc_idx];
-//        yy[i] = y[ptc_idx];
-//        zz[i] = z[ptc_idx];
-//        qq[i] = 1;
-//        ptc_idx = ptclist[ptc_idx];
-//    }
-//
-//    double * mltp = new double[Number_of_total_element];
-//    Charge_to_Multipole(tree[box_idx].n_ptcl, qq, tree[box_idx].center[0],tree[box_idx].center[1],tree[box_idx].center[2],xx,yy,zz,mltp);
-//
-//    for(int i=0; i<Number_of_total_element; ++i){
-//        cout<<mltp[i]<<' '<<multipole_expns[box_idx*Number_of_total_element+i]<<endl;
-//    }
-//    delete[] xx;
-//    delete[] yy;
-//    delete[] zz;
-//    delete[] qq;
-//    delete[] mltp;
-
-
-
-
 
     //set zero for output potential
     memset(phi, 0, n_ptc*sizeof(double));
@@ -360,10 +272,5 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
     delete[] Nabla_R;
 	end_fmm();
 
-//	for(unsigned long int i=0; i<Number_of_particle;++i){
-//        output<<phi[i]<<endl;
-//	}
-//
-//    output.close();
 	return 0;
 }

@@ -25,34 +25,6 @@ void Charge_2_M_pre(double Charge, double Multipole_x, double Multipole_y, doubl
 	}
 }
 
-
-
-//Charge to multipole
-void Charge_to_Multipole(int Charge_Number, double *Charge, double Multipole_x, double Multipole_y, double Multipole_z, double *Charge_x, double *Charge_y, double *Charge_z, double *Born_Multipole){
-
-	double * temp_M = scratch;
-	memset(temp_M, 0, Number_of_total_element*sizeof(double));
-	memset(Born_Multipole, 0, Number_of_total_element*sizeof(double));
-
-	for (int i = 0; i < Charge_Number; i++)
-	{
-		Charge_2_M_pre(Charge[i], Multipole_x, Multipole_y, Multipole_z, Charge_x[i], Charge_y[i], Charge_z[i], temp_M);
-		for (int j = 0; j < Number_of_total_element; j++)
-		{
-			Born_Multipole[j] += temp_M[j];
-		}
-
-	}
-
-	for (int i = 0; i < Number_of_total_element; i++)
-	{
-		int n = index_n1[i] + index_n2[i] + index_n3[i];
-
-		Born_Multipole[i] *= (1 - (n % 2) * 2) / Factorial[n];
-	}
-
-}
-
 void Charge_to_Multipole(Box & box, double *Charge, double *Charge_x, double *Charge_y, double *Charge_z, unsigned long int *ptclist, double *Born_Multipole){
 
 	double * temp_M = scratch;
@@ -71,60 +43,16 @@ void Charge_to_Multipole(Box & box, double *Charge, double *Charge_x, double *Ch
 			Born_Multipole[j] += temp_M[j];
 		}
 		idx = ptclist[idx];
-
 	}
 
-	for (int i = 0; i < Number_of_total_element; ++i)
-	{
-		int n = index_n1[i] + index_n2[i] + index_n3[i];
-
-		Born_Multipole[i] *= (1 - (n % 2) * 2) / Factorial[n];
-	}
-
-}
-
-
-
-void Multipole_to_Multipole(double old_x, double old_y, double old_z, double new_x, double new_y, double new_z, double *Old_M, double *New_M)
-{
-	double x = new_x - old_x;
-	double y = new_y - old_y;
-	double z = new_z - old_z;
-
-	for (int i = 0; i < Number_of_total_element; i++)
-	{
-		int n1 = index_n1[i];
-		int n2 = index_n2[i];
-		int n3 = index_n3[i];
-
-		int n = n1 + n2 + n3;
-
-		New_M[i] = 0;
-		for (int m1 = 0; m1 <= n1; m1++)
-		{
-			for (int m2 = 0; m2 <= n2; m2++)
-			{
-				for (int m3 = 0; m3 <= n3; m3++)
-				{
-					int m = m1 + m2 + m3;
-
-					double Power_of_xyz = pow(x, m1) * pow(y, m2) * pow(z, m3);
-
-					int index_of_old_element = Find_index(n1 - m1, n2 - m2, n3 - m3);
-					double Old_element = Old_M[index_of_old_element];
-
-					New_M[i] += Factorial[n - m] / Factorial[n] * combination(n1, m1) * combination(n2, m2) * combination(n3, m3) * Power_of_xyz * Old_element;
-				}
-			}
-		}
+	for(int n=0; n<n_Max_rank+1; ++n){
+        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1];++i) Born_Multipole[i] *= inv_Fact_order_minus_one[n];
 	}
 }
 
 
 void Multipole_to_Multipole(double old_x, double old_y, double old_z, double new_x, double new_y, double new_z, double * multipole_coef, double *Old_M, double *New_M)
 {
-	int coef;
-
 	int cnt = 0;
 
 	for (int i = 0; i < Number_of_total_element; i++)
@@ -140,7 +68,7 @@ void Multipole_to_Multipole(double old_x, double old_y, double old_z, double new
 			{
 				for (int m3 = 0; m3 <= n3; m3++)
 				{
-				    coef = 1;
+				    int coef = 1;
 					if (new_x<old_x) coef *= (1 - (m1 % 2) * 2);
                     if (new_y<old_y) coef *= (1 - (m2 % 2) * 2);
                     if (new_z<old_z) coef *= (1 - (m3 % 2) * 2);
@@ -170,7 +98,7 @@ void multipole_to_multipole_coef(double boxsize, double * multipole_coef){
 				for (int m3 = 0; m3 <= n3; m3++)
 				{
 					int m = m1 + m2 + m3;
-					multipole_coef[cnt] = Factorial[n - m] / Factorial[n] * combination(n1, m1) * combination(n2, m2) * combination(n3, m3) * pow(0.5*boxsize, m);
+					multipole_coef[cnt] = Factorial[n - m] * inv_Factorial [n] * combination[n1][m1] * combination[n2][m2] * combination[n3][m3] * pow(0.5*boxsize, m);
 					++cnt;
 				}
 			}
@@ -180,8 +108,7 @@ void multipole_to_multipole_coef(double boxsize, double * multipole_coef){
 
 void update_multipole_to_multipole_coef(double * multipole_coef){
     int cnt = 0;
-    for (int i = 0; i < Number_of_total_element; i++)
-	{
+    for (int i = 0; i < Number_of_total_element; i++){
 		int n1 = index_n1[i];
 		int n2 = index_n2[i];
 		int n3 = index_n3[i];
@@ -202,18 +129,15 @@ void update_multipole_to_multipole_coef(double * multipole_coef){
 };
 
 void Calc_Nabla_R(double boxsize, double * Nabla_R){
-//    double * tmp = new double[Number_of_total_element];
-//    Nabla_r_traceless(boxsize, boxsize, boxsize, tmp);
     int shift;
     for(int i3=2; i3<4; ++i3){
         for(int i2=0; i2<i3+1; ++i2){
             for(int i1=0; i1<i2+1; ++i1){
                 shift = nabla_idx[i1][i2][i3-2];
-                Nabla_r_traceless(i1*boxsize, i2*boxsize, i3*boxsize, &Nabla_R[shift*Number_of_total_element]);
+                Nabla_r_traceless(i1*boxsize, i2*boxsize, i3*boxsize, Nabla_1_element_r_coef, &Nabla_R[shift*Number_of_total_element]);
             }
         }
     }
-//    delete[] tmp;
 }
 
 void update_Nabla_R(double * Nabla_R){
@@ -225,14 +149,8 @@ void update_Nabla_R(double * Nabla_R){
     }
 }
 
-
-
 void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Multi_y, double Multi_z, double Local_x, double Local_y, double Local_z, double * Saved_Nabla_R, double boxsize, double *M2L_translation)
 {
-	//double x = Multi_x - Local_x;
-	//double y = Multi_y - Local_y;
-	//double z = Multi_z - Local_z;
-
 	int idx[3], seq[3];
 	int sign[3] = {1,1,1};
 
@@ -248,55 +166,25 @@ void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Mult
 	int shift = nabla_idx[idx[seq[0]]][idx[seq[1]]][idx[seq[2]]-2];
 
     double *Nabla_R = scratch2;
-//    memset(Nabla_R, 0, Number_of_total_element*sizeof(double));
-    if (change==0) {
-        for(int n=0; n<=n_Max_rank;++n){
-            int coef, n1, n2, n3;
-            for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
-                n1 = index_n1[i];
-                n2 = index_n2[i];
-                n3 = index_n3[i];
-                coef = 1;
-                if (n1%2==1)    coef *= sign[0];
-                if (n2%2==1)    coef *= sign[1];
-                if (n3%2==1)    coef *= sign[2];
-                Nabla_R[i] = coef*Saved_Nabla_R[shift*Number_of_total_element+i];
-            }
-        }
-    }
 
-    if (change>0) {
-        for(int n=0; n<=n_Max_rank;++n){
+    for(int n=0; n<=n_Max_rank;++n){
+        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
             int coef, index, ni[3];
-            for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
-                ni[0] = index_n1[i];
-                ni[1] = index_n2[i];
-                ni[2] = index_n3[i];
-                index = Find_index(ni[seq[0]],ni[seq[1]], ni[seq[2]]);
+            ni[0] = index_n1[i];
+            ni[1] = index_n2[i];
+            ni[2] = index_n3[i];
+            if (change==0) index = i;
+            else index = Find_index(ni[seq[0]],ni[seq[1]], ni[seq[2]]);
 
-                coef = 1;
-                if (ni[0]%2==1)    coef *= sign[0];
-                if (ni[1]%2==1)    coef *= sign[1];
-                if (ni[2]%2==1)    coef *= sign[2];
-                Nabla_R[i] = coef*Saved_Nabla_R[shift*Number_of_total_element+index];
-            }
+            coef = 1;
+            if (ni[0]%2==1)    coef *= sign[0];
+            if (ni[1]%2==1)    coef *= sign[1];
+            if (ni[2]%2==1)    coef *= sign[2];
+            Nabla_R[i] = coef*Saved_Nabla_R[shift*Number_of_total_element+index];
         }
     }
 
-    for(int n=0; n<=n_Max_rank; ++n){
-        int n1, n2, n3, index_a, index_b;
-        for(int i=n_Rank_Multipole_Start_Position[n]+2*n+1; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
-            n1 = index_n1[i];
-            n2 = index_n2[i];
-            n3 = index_n3[i];
-
-            index_a = Find_index(n1 + 2, n2, n3 - 2);
-            index_b = Find_index(n1, n2 + 2, n3 - 2);
-
-            Nabla_R[i] = -Nabla_R[index_a] - Nabla_R[index_b];
-
-        }
-    }
+    fill_traceless_tensor(Nabla_R);
 
 	memset(M2L_translation, 0, Number_of_total_element*sizeof(double));
 
@@ -307,7 +195,6 @@ void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Mult
 		for (int l = 0; l <= n_Max_rank - k; l++)
 		{
 			Contraction_traceless(Nabla_R, Multipole_for_trans, M2L_temp, l + k, l);
-//			for (int i = n_Rank_Multipole_Start_Position[k]; i < n_Rank_Multipole_Start_Position[k + 1]; i++)
             for (int i = n_Rank_Multipole_Start_Position[k]; i < n_Rank_Multipole_Start_Position[k]+2*k+1; ++i)
 			{
 				M2L_translation[i] += M2L_temp[i];
@@ -316,73 +203,16 @@ void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Mult
 	}
 
 	for(int n=0; n<=n_Max_rank; ++n){
-        int n1, n2, n3, index_a, index_b;
-        double coef = 1/Factorial[n];
         for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
-            M2L_translation[i] = M2L_translation[i]*coef;
-        }
-
-        for(int i=n_Rank_Multipole_Start_Position[n]+2*n+1; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
-            n1 = index_n1[i];
-            n2 = index_n2[i];
-            n3 = index_n3[i];
-
-            index_a = Find_index(n1 + 2, n2, n3 - 2);
-            index_b = Find_index(n1, n2 + 2, n3 - 2);
-
-            M2L_translation[i] = -M2L_translation[index_a] - M2L_translation[index_b];
+            M2L_translation[i] = M2L_translation[i]*inv_Factorial[n];
         }
 	}
 
-//
-//	for (int i = 0; i < Number_of_total_element; i++)
-//	{
-//		int n = index_n1[i] + index_n2[i] + index_n3[i];
-//		M2L_translation[i] = M2L_translation[i] / Factorial[n];
-//	}
-
+	fill_traceless_tensor(M2L_translation);
 }
-
-void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Multi_y, double Multi_z, double Local_x, double Local_y, double Local_z, double *M2L_translation)
-{
-	//double x = Multi_x - Local_x;
-	//double y = Multi_y - Local_y;
-	//double z = Multi_z - Local_z;
-
-	memset(M2L_translation, 0, Number_of_total_element*sizeof(double));
-
-	double *Nabla_R = scratch2;
-	memset(Nabla_R, 0, Number_of_total_element*sizeof(double));
-	Nabla_r_traceless(Local_x, Local_y, Local_z, Multi_x, Multi_y, Multi_z, Nabla_R);
-	//	Nabla.Nabla_r_traceless(Multi_x, Multi_y, Multi_z, Local_x, Local_y, Local_z, Nabla_R);
-
-	double *M2L_temp = scratch;
-	memset(M2L_temp, 0, Number_of_total_element*sizeof(double));
-	for (int k = 0; k <= n_Max_rank; k++)
-	{
-		for (int l = 0; l <= n_Max_rank - k; l++)
-		{
-			Contraction_traceless(Nabla_R, Multipole_for_trans, M2L_temp, l + k, l);
-			for (int i = n_Rank_Multipole_Start_Position[k]; i < n_Rank_Multipole_Start_Position[k + 1]; i++)
-			{
-				M2L_translation[i] += M2L_temp[i];
-				//				M2L_translation[i] += M2L_temp[i] * (1 - ((k + l) % 2) * 2);
-			}
-		}
-	}
-	for (int i = 0; i < Number_of_total_element; i++)
-	{
-		int n = index_n1[i] + index_n2[i] + index_n3[i];
-		M2L_translation[i] = M2L_translation[i] / Factorial[n];
-	}
-
-}
-
 
 void Calc_Rho_Tensor(double boxsize, double * Rho_Tensor){
     Symmetric_Tensor(0.25*boxsize, 0.25*boxsize, 0.25*boxsize, Rho_Tensor);
-
-
     for(int ix=0; ix<2; ++ix){
         for (int iy = 0; iy<2; ++iy){
             for(int iz=0; iz<2; ++iz){
@@ -393,15 +223,15 @@ void Calc_Rho_Tensor(double boxsize, double * Rho_Tensor){
 
                 if(shift>0){
                     for(int n=0; n<n_Max_rank+1; ++n){
-                        int coef, n1, n2, n3;
                         for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
+                            int coef, n1, n2, n3;
                             n1 = index_n1[i];
                             n2 = index_n2[i];
                             n3 = index_n3[i];
                             coef = 1;
-                            if (ix>0)    coef *= (1 - (n1 % 2) * 2);
-                            if (iy>0)    coef *= (1 - (n2 % 2) * 2);
-                            if (iz>0)    coef *= (1 - (n3 % 2) * 2);
+                            if (ix>0)    coef *= order_minus_one[n1];
+                            if (iy>0)    coef *= order_minus_one[n2];
+                            if (iz>0)    coef *= order_minus_one[n3];
 
                             Rho_Tensor[i+shift*Number_of_total_element] = coef*Rho_Tensor[i];
                         }
@@ -426,21 +256,6 @@ void Local_to_Local(double *Old_Local, double Old_x, double Old_y, double Old_z,
 	memset(New_Local, 0, Number_of_total_element * sizeof(double));
 
 	double *Rho_Tensor = scratch;
-//	memset(Rho_Tensor, 0, Number_of_total_element * sizeof(double));
-//	for(int n=0; n<n_Max_rank+1; ++n){
-//        int coef, n1, n2, n3;
-//        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
-//            n1 = index_n1[i];
-//            n2 = index_n2[i];
-//            n3 = index_n3[i];
-//            coef = 1;
-//            if (New_x<Old_x)    coef *= (1 - (n1 % 2) * 2);
-//            if (New_y<Old_y)    coef *= (1 - (n2 % 2) * 2);
-//            if (New_z<Old_z)    coef *= (1 - (n3 % 2) * 2);
-//
-//            Rho_Tensor[i] = coef*Origin_Rho_Tensor[i];
-//        }
-//    }
 
     int shift = 0;
     if (New_x<Old_x)    shift += 4;
@@ -448,82 +263,20 @@ void Local_to_Local(double *Old_Local, double Old_x, double Old_y, double Old_z,
     if (New_z<Old_z)    shift += 1;
     memcpy ( Rho_Tensor, &Origin_Rho_Tensor[shift*Number_of_total_element], Number_of_total_element*sizeof(double) );
 
-//	double x = New_x - Old_x;
-//	double y = New_y - Old_y;
-//	double z = New_z - Old_z;
-//
-//	Symmetric_Tensor(x, y, z, Rho_Tensor);
-
 	double *L2L_temp = scratch2;
 	for (int n = 0; n <= n_Max_rank; n++)
 	{
 		for (int m = n; m <= n_Max_rank; m++)
 		{
-			double Factor = combination(m, m - n);
-//			double *L2L_temp = scratch2;
 			memset(L2L_temp, 0, Number_of_total_element * sizeof(double));
 			Contraction_traceless(Old_Local, Rho_Tensor, L2L_temp, m, m - n);
-
-//			for (int i = n_Rank_Multipole_Start_Position[n]; i < n_Rank_Multipole_Start_Position[n + 1]; i++)
-//			{
-//				New_Local[i] += L2L_temp[i] * Factor;
-//			}
-
 			for (int i = n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
-                New_Local[i] += L2L_temp[i] * Factor;
+                New_Local[i] += L2L_temp[i] * combination[m][m - n];
 			}
 		}
 	}
 
-	int n1, n2, n3, index_a, index_b;
-    for(int n=0; n<n_Max_rank+1; ++n){
-        int Start_index = n_Rank_Multipole_Start_Position[n];
-        int End_index = n_Rank_Multipole_Start_Position[n + 1];
-        for(int i=Start_index+2*n+1; i<End_index; ++i){
-            n1 = index_n1[i];
-            n2 = index_n2[i];
-            n3 = index_n3[i];
-
-            index_a = Find_index(n1 + 2, n2, n3 - 2);
-            index_b = Find_index(n1, n2 + 2, n3 - 2);
-
-            New_Local[i] = -New_Local[index_a] - New_Local[index_b];
-        }
-    }
-
-
-}
-
-void Local_to_Local(double *Old_Local, double Old_x, double Old_y, double Old_z, double New_x, double New_y, double New_z, double *New_Local)
-{
-	memset(New_Local, 0, Number_of_total_element * sizeof(double));
-
-	double *Rho_Tensor = scratch;
-	memset(Rho_Tensor, 0, Number_of_total_element * sizeof(double));
-
-	double x = New_x - Old_x;
-	double y = New_y - Old_y;
-	double z = New_z - Old_z;
-
-	Symmetric_Tensor(x, y, z, Rho_Tensor);
-
-	double *L2L_temp = scratch2;
-	for (int n = 0; n <= n_Max_rank; n++)
-	{
-		for (int m = n; m <= n_Max_rank; m++)
-		{
-			double Factor = combination(m, m - n);
-//			double *L2L_temp = scratch2;
-			memset(L2L_temp, 0, Number_of_total_element * sizeof(double));
-			Contraction_traceless(Old_Local, Rho_Tensor, L2L_temp, m, m - n);
-
-			for (int i = n_Rank_Multipole_Start_Position[n]; i < n_Rank_Multipole_Start_Position[n + 1]; i++)
-			{
-				New_Local[i] += L2L_temp[i] * Factor;
-			}
-		}
-	}
-
+	fill_traceless_tensor(New_Local);
 }
 
 double MultipolePotential(double *Multipole, double Multi_x, double Multi_y, double Multi_z, double Poten_x, double Poten_y, double Poten_z)
@@ -532,15 +285,9 @@ double MultipolePotential(double *Multipole, double Multi_x, double Multi_y, dou
 
 	double *Nabla_R = scratch;
 	memset(Nabla_R, 0, Number_of_total_element * sizeof(double));
-	double *CT_temp = scratch2;
-	memset(CT_temp, 0, Number_of_total_element * sizeof(double));
-	Nabla_r_traceless(Poten_x, Poten_y, Poten_z, Multi_x, Multi_y, Multi_z, Nabla_R);
+	Nabla_r_traceless(Poten_x-Multi_x, Poten_y-Multi_y, Poten_z-Multi_z, Nabla_1_element_r_coef, Nabla_R);
 
-	for (int n_rank = 0; n_rank <= n_Max_rank; n_rank++)
-	{
-		Contraction(Multipole, Nabla_R, CT_temp, n_rank, n_rank);
-		multipole_potential += CT_temp[0];
-	}
+	for (int n_rank = 0; n_rank <= n_Max_rank; n_rank++) multipole_potential += Contraction_equal_rank(Multipole, Nabla_R, n_rank);
 
 	return multipole_potential;
 }
@@ -552,7 +299,9 @@ void Charge_to_Local_pre(double q, double old_x, double old_y, double old_z, dou
 	double x = old_x - new_x;
 	double y = old_y - new_y;
 	double z = old_z - new_z;
-
+    double r_2 = x * x + y * y + z * z;
+    double inv_r2 = 1.0/r_2;
+    double inv_r = sqrt(inv_r2);
 	for (int i = 0; i < Number_of_total_element; i++)
 	{
 		int n1 = index_n1[i];
@@ -560,8 +309,8 @@ void Charge_to_Local_pre(double q, double old_x, double old_y, double old_z, dou
 		int n3 = index_n3[i];
 
 		int n = n1 + n2 + n3;
-		double r_2 = x * x + y * y + z * z;
-		double r_coe = (1 - (n % 2) * 2) / (pow(r_2, n) * sqrt(r_2));
+
+		double r_coe = order_minus_one[n]* pow(inv_r2, n)*inv_r;
 
 		L_expansion[i] = q * Nabla_1_element_r(n1, n2, n3, n, x, y, z, r_2, r_coe);
 	}
@@ -572,34 +321,24 @@ void Charge_to_Local_pre_traceless(double q, double old_x, double old_y, double 
 	double x = old_x - new_x;
 	double y = old_y - new_y;
 	double z = old_z - new_z;
+	double r_2 = x * x + y * y + z * z;
+    double inv_r2 = 1.0/r_2;
+    double inv_r = sqrt(inv_r2);
 
-    int n1, n2, n3;
+    int cnt=0;
 	for(int n=0; n<n_Max_rank+1; ++n){
-        int Start_index = n_Rank_Multipole_Start_Position[n];
-        int End_index = n_Rank_Multipole_Start_Position[n + 1];
-        for(int i=Start_index; i<Start_index+2*n+1; ++i){
+        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
+            int n1, n2, n3;
             n1 = index_n1[i];
             n2 = index_n2[i];
             n3 = index_n3[i];
 
-            int n = n1 + n2 + n3;
-            double r_2 = x * x + y * y + z * z;
-            double r_coe = (1 - (n % 2) * 2) / (pow(r_2, n) * sqrt(r_2));
+            double r_coe = order_minus_one[n] * pow(inv_r2, n) * inv_r;
 
-            L_expansion[i] = q * Nabla_1_element_r(n1, n2, n3, n, x, y, z, r_2, r_coe);
+            L_expansion[i] = q * Nabla_1_element_r(n1, n2, n3, n, x, y, z, r_2, r_coe, cnt, Nabla_1_element_r_coef);
         }
-        for(int i=Start_index+2*n+1; i<End_index; ++i){
-            n1 = index_n1[i];
-            n2 = index_n2[i];
-            n3 = index_n3[i];
-
-            int index_a = Find_index(n1 + 2, n2, n3 - 2);
-            int index_b = Find_index(n1, n2 + 2, n3 - 2);
-
-            L_expansion[i] = -L_expansion[index_a] - L_expansion[index_b];
-        }
-
 	}
+	fill_traceless_tensor(L_expansion);
 }
 
 void Charge_to_Local_traceless(Box &box, unsigned long int * ptclist, double *q, double *old_x, double *old_y, double *old_z, double new_x, double new_y, double new_z, double *L_expansion)
@@ -615,94 +354,19 @@ void Charge_to_Local_traceless(Box &box, unsigned long int * ptclist, double *q,
 		Charge_to_Local_pre_traceless(q[idx], old_x[idx], old_y[idx], old_z[idx], new_x, new_y, new_z, temp_L);
 
         for(int n=0; n<n_Max_rank+1; ++n){
-            int Start_index = n_Rank_Multipole_Start_Position[n];
-            for(int i=Start_index; i<Start_index+2*n+1; ++i){
+            for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
                 L_expansion[i] += temp_L[i];
             }
         }
         idx = ptclist[idx];
 	}
 
-    int n1, n2, n3;
     for(int n=0; n<n_Max_rank+1; ++n){
-        int Start_index = n_Rank_Multipole_Start_Position[n];
-        int End_index = n_Rank_Multipole_Start_Position[n + 1];
-        for(int i=Start_index; i<Start_index+2*n+1; ++i){
-            n1 = index_n1[i];
-            n2 = index_n2[i];
-            n3 = index_n3[i];
-
-            int n = n1 + n2 + n3;
-            L_expansion[i] *= (1 - (n % 2) * 2) / Factorial[n];
-        }
-        for(int i=Start_index+2*n+1; i<End_index; ++i){
-            n1 = index_n1[i];
-            n2 = index_n2[i];
-            n3 = index_n3[i];
-
-            int index_a = Find_index(n1 + 2, n2, n3 - 2);
-            int index_b = Find_index(n1, n2 + 2, n3 - 2);
-
-            L_expansion[i] = -L_expansion[index_a] - L_expansion[index_b];
-        }
+        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i) L_expansion[i] *= inv_Fact_order_minus_one[n];
     }
 
-}
+    fill_traceless_tensor(L_expansion);
 
-
-void Charge_to_Local(Box &box, unsigned long int * ptclist, double *q, double *old_x, double *old_y, double *old_z, double new_x, double new_y, double new_z, double *L_expansion)
-{
-	double *temp_L = scratch;
-	memset(temp_L, 0, Number_of_total_element*sizeof(double));
-	memset(L_expansion, 0, Number_of_total_element*sizeof(double));
-
-    unsigned long int idx = box.first_ptcl;
-	for (unsigned int i = 0; i < box.n_ptcl; ++i)
-	{
-		Charge_to_Local_pre(q[idx], old_x[idx], old_y[idx], old_z[idx], new_x, new_y, new_z, temp_L);
-		for (int i = 0; i < Number_of_total_element; i++)
-		{
-			L_expansion[i] += temp_L[i];
-		}
-        idx = ptclist[idx];
-	}
-
-
-	for (int i = 0; i < Number_of_total_element; i++)
-	{
-		int n1 = index_n1[i];
-		int n2 = index_n2[i];
-		int n3 = index_n3[i];
-
-		int n = n1 + n2 + n3;
-		L_expansion[i] *= (1 - (n % 2) * 2) / Factorial[n];
-	}
-}
-
-
-void Charge_to_Local(double charge_number, double *q, double *old_x, double *old_y, double *old_z, double new_x, double new_y, double new_z, double *L_expansion)
-{
-	double *temp_L = scratch;
-	memset(temp_L, 0, Number_of_total_element*sizeof(double));
-	memset(L_expansion, 0, Number_of_total_element*sizeof(double));
-
-	for (int i = 0; i < charge_number; i++)
-	{
-		Charge_to_Local_pre(q[i], old_x[i], old_y[i], old_z[i], new_x, new_y, new_z, temp_L);
-		for (int i = 0; i < Number_of_total_element; i++)
-		{
-			L_expansion[i] += temp_L[i];
-		}
-	}
-	for (int i = 0; i < Number_of_total_element; i++)
-	{
-		int n1 = index_n1[i];
-		int n2 = index_n2[i];
-		int n3 = index_n3[i];
-
-		int n = n1 + n2 + n3;
-		L_expansion[i] *= (1 - (n % 2) * 2) / Factorial[n];
-	}
 }
 
 
@@ -718,14 +382,7 @@ double LocalPotential(double *Local_expan, double Local_x, double Local_y, doubl
 	memset(SymmeticTensor, 0, Number_of_total_element*sizeof(double));
 	Symmetric_Tensor(x, y, z, SymmeticTensor);
 
-	double *Local_temp = scratch2;
-	memset(Local_temp, 0, Number_of_total_element*sizeof(double));
-
-	for (int i = 0; i <= n_Max_rank; i++)
-	{
-		Contraction_traceless(Local_expan, SymmeticTensor, Local_temp, i, i);
-		L_Potential += Local_temp[0];
-	}
+	for (int i = 0; i <= n_Max_rank; i++) L_Potential += Contraction_equal_rank(Local_expan, SymmeticTensor,i);
 
 	return L_Potential;
 }

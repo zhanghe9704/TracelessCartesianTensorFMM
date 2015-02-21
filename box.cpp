@@ -62,7 +62,6 @@ int create_tree(double * x, double * y, double * z, const unsigned long int n, c
 			//go through all the particles in the box
 			unsigned long int idx=tree[i].first_ptcl;
 			while(idx!=n){	//when idx==n, reached the end of the particle list
-			//for (unsigned long int idx=tree[i].first_ptcl; idx<tree[i].n_ptcl; ++idx){
 				nx = (x[idx]-tree[i].center[0]>0)?1:0;
 				ny = (y[idx]-tree[i].center[1]>0)?1:0;
 				nz = (z[idx]-tree[i].center[2]>0)?1:0;
