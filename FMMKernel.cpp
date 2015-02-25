@@ -19,10 +19,7 @@ void Charge_2_M_pre(double Charge, double Multipole_x, double Multipole_y, doubl
 	double y = Charge_y - Multipole_y;
 	double z = Charge_z - Multipole_z;
 
-	for (int i = 0; i < Number_of_total_element; i++)
-	{
-		Born_Multipole_pre[i] = Charge * pow(x, index_n1[i]) * pow(y, index_n2[i]) * pow(z, index_n3[i]);
-	}
+    Symmetric_Tensor(x,y,z,Born_Multipole_pre);
 }
 
 void Charge_to_Multipole(Box & box, double *Charge, double *Charge_x, double *Charge_y, double *Charge_z, unsigned long int *ptclist, double *Born_Multipole){

@@ -26,6 +26,7 @@ void Contraction(double *High_rank_Tensor, double *Low_rank_Tensor, double *HL_r
 void Contraction_traceless(double *High_rank_Tensor, double *Low_rank_Tensor, double *HL_rank_Tensor, int m, int n);
 
 void fill_traceless_tensor(double * tensor);
+void fill_symmetric_tensor_r(double r2, double *SymmetricTensor);
 double Contraction_equal_rank(double * Tensor1, double * Tensor2, int n);
 
 #endif

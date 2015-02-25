@@ -42,13 +42,41 @@ int sequence3 (int x[3], int idx[3]){
 //	return Factorial[n] / (pow(2.0, m)* Factorial[m] * Factorial[n - 2 * m]);
 //}
 
-void Symmetric_Tensor(double x, double y, double z, double *SymmeticTensor)
-{
-	for (int i = 0; i < Number_of_total_element; i++)
-	{
-		SymmeticTensor[i] =
-			pow(x, index_n1[i]) * pow(y, index_n2[i]) * pow(z, index_n3[i]);
-	}
+//void Symmetric_Tensor(double x, double y, double z, double *SymmeticTensor)
+//{
+//	for (int i = 0; i < Number_of_total_element; i++)
+//	{
+//		SymmeticTensor[i] =
+//			pow(x, index_n1[i]) * pow(y, index_n2[i]) * pow(z, index_n3[i]);
+//	}
+//}
+
+void fill_symmetric_tensor_r(double r2, double *SymmetricTensor){
+    for(int n=0; n<n_Max_rank+1; ++n){
+        for(int i=n_Rank_Multipole_Start_Position[n]+2*n+1; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
+            int n1, n2, n3, index_a, index_b, index;
+            n1 = index_n1[i];
+            n2 = index_n2[i];
+            n3 = index_n3[i];
+
+            index_a = Find_index(n1 + 2, n2, n3 - 2);
+            index_b = Find_index(n1, n2 + 2, n3 - 2);
+            index = Find_index(n1,n2,n3-2);
+            SymmetricTensor[i] = SymmetricTensor[index]*r2-SymmetricTensor[index_a]-SymmetricTensor[index_b];
+        }
+    }
+}
+
+void Symmetric_Tensor(double x, double y, double z, double *SymmetricTensor){
+    double r2 = x*x+y*y+z*z;
+    for(int n=0; n<n_Max_rank+1; ++n){
+        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
+            SymmetricTensor[i] = pow(x, index_n1[i]) * pow(y, index_n2[i]) * pow(z, index_n3[i]);
+        }
+    }
+
+    fill_symmetric_tensor_r(r2, SymmetricTensor);
+
 }
 
 //Using the value of the first 2*n+1 elements to calculate the value of the other elements for a traceless totally symmetric tensor
