@@ -36,7 +36,7 @@ int sequence3 (int x[3], int idx[3]){
 //{
 //	return Factorial[n] / (Factorial[m] * Factorial[n - m]);
 //}
-
+//
 //double combination_HH(int n, int m)
 //{
 //	return Factorial[n] / (pow(2.0, m)* Factorial[m] * Factorial[n - 2 * m]);
@@ -252,6 +252,74 @@ void Nabla_r_traceless(double x, double y, double z, double * coef, double *Nabl
 	fill_traceless_tensor(Nabla_R);
 }
 
+double tracer(double * tensor, int n1, int n2, int n3, int m){
+    double trace = 0;
+    for(int k1=0; k1<m+1; ++k1){
+        for(int k2=0; k2<m-k1+1; ++k2){
+            int k3 = m-k1-k2;
+            int idx = Find_index(n1+2*k1, n2+2*k2, n3+2*k3);
+            trace += tensor[idx]*Factorial[m]*inv_Factorial[k1]*inv_Factorial[k2]*inv_Factorial[k3];
+        }
+    }
+    return trace;
+}
+
+void detracer(double * symmetric_tensor, double * traceless_tensor){
+    for(int n=0; n<n_Max_rank+1; ++n){
+        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
+            int n1, n2, n3;
+            n1 = index_n1[i];
+            n2 = index_n2[i];
+            n3 = index_n3[i];
+            traceless_tensor[i] = 0;
+            for(int m1=0; m1<=(n1/2);++m1){
+                for(int m2=0; m2<=(n2/2); ++m2){
+                    for(int m3=0; m3<=(n3/2);++m3){
+                        int m = m1+m2+m3;
+                        int idx1, idx2, idx3;
+                        idx1 = n1-2*m1;
+                        idx2 = n2-2*m2;
+                        idx3 = n3-2*m3;
+
+                        traceless_tensor[i] += order_minus_one[m]*Factorial_odd[n-m]
+                          *combination_HH[n1][m1]*combination_HH[n2][m2]*combination_HH[n3][m3]
+                          *tracer(symmetric_tensor, idx1, idx2, idx3, m);
+
+                    }
+                }
+            }
+        }
+    }
+    fill_traceless_tensor(traceless_tensor);
+}
+
+
+
+void detracer_direct(double * symmetric_tensor, double * traceless_tensor){
+    for(int i=0; i<Number_of_total_element;++i){
+        int n1, n2, n3, n;
+		n1 = index_n1[i];
+		n2 = index_n2[i];
+		n3 = index_n3[i];
+		n = n1 + n2 + n3;
+		traceless_tensor[i] = 0;
+		for(int m1=0; m1<=(n1/2);++m1){
+            for(int m2=0; m2<=(n2/2); ++m2){
+                for(int m3=0; m3<=(n3/2);++m3){
+                    int m = m1+m2+m3;
+                    int idx1, idx2, idx3;
+                    idx1 = n1-2*m1;
+                    idx2 = n2-2*m2;
+                    idx3 = n3-2*m3;
+                    traceless_tensor[i] += order_minus_one[m]*Factorial_odd[n-m]
+                          *combination_HH[n1][m1]*combination_HH[n2][m2]*combination_HH[n3][m3]
+                          *tracer(symmetric_tensor, idx1, idx2, idx3, m);
+
+                }
+            }
+		}
+    }
+}
 
 
 

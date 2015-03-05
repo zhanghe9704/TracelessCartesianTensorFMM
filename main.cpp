@@ -69,10 +69,10 @@ double error(double * phi, double * phi_fmm, unsigned long int n){
 
 int main(){
 
-	unsigned long int N=32000;
+	unsigned long int N=1000000;
 	unsigned long int N_calc = 1000;
-	int n_ptc_box = 200;
-    int n_rank = 6;
+	int n_ptc_box = 100;
+    int n_rank = 4;
 
 	double * x = new double[N];
 	double * y = new double[N];

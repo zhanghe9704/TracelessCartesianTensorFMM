@@ -228,6 +228,28 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
 
 	create_colleague(tree, clg);
 
+
+//// Check the detracer operator
+//	double ix = 2;
+//	double iy = 3;
+//	double iz = 5;
+//	double * m = new double[Number_of_total_element];
+//	double * trm = new double[Number_of_total_element];
+//	double * n = new double[Number_of_total_element];
+//	double ct1 = 0;
+//	double ct2 = 0;
+//    Symmetric_Tensor(ix,iy,iz, m);
+//    Nabla_r_traceless(ix,iy,iz,n);
+//    detracer(m,trm);
+//
+//    for(int i=0; i<n_Max_rank+1; ++i){
+//        ct1 += Contraction_equal_rank(m,n,i);
+//        ct2 += Contraction_equal_rank(trm,n,i)/Factorial_odd[i];
+//    }
+//    detracer(m,n);
+//
+
+
     calc_multipole(tree, q, x, y, z);
 
     //set zero for output potential
