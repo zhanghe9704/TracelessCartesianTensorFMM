@@ -1,3 +1,14 @@
+/**********************************
+FMMframe.cpp
+
+Frame of the MLFMA
+Define the function to calculate the Coulomb potential using MLFMA and all related functions used in the frame
+
+version 1.0
+By He Zhang, 02/2015
+
+***********************************/
+
 #include "head.hpp"
 
 //Calculate the multipole expansions for all boxes except for the root box
@@ -86,6 +97,7 @@ int well_separated(unsigned long int obj_idx, Box &obj_box, unsigned long int sr
     return 0;
 }
 
+//Translate the local expansion from the parent box to its child box
 int local_exp_from_parent(unsigned long int parent_idx, Box &parent_box, unsigned long int child_idx, Box &child_box, double * Rho_Tensor){
     //use global local_expns.
 
@@ -209,6 +221,7 @@ int check_colleague_child(vector<Box> &tree, unsigned long int itr, unsigned lon
             return 0;
 }
 
+//Calculate the Coulomb potential on each particle by MLFMA
 int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc, int max_rank, int n_ptc_box, double * phi){
 
     vector<Box> tree;

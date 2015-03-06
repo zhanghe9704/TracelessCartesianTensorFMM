@@ -2,6 +2,10 @@
 FMMConstants.cpp
 Define and initialize the constants used in the kernel functions for the multiple level fast multipole algorithm using tensors
 
+version 2.0
+By He Zhang 03/06/2015
+Added more scratch variables
+
 version 1.0
 By He Huang & He Zhang, 12/29/2014
 
@@ -24,8 +28,7 @@ double * pow_y;
 double * pow_z;
 double * pow_r2;
 
-//int nabla_idx[4][4][2]={0};
-
+//Calculate the coefs for combination operator
 int calc_combination_coef(double * combination_coef){
     for(int i=0; i<Number_of_total_element; ++i){
         int n1, n2, n3;
@@ -38,6 +41,7 @@ int calc_combination_coef(double * combination_coef){
     return 0;
 }
 
+//Calculate the coefs for Nabla operator
 int Calc_Nabla_1_emement_coef(double * Nabla_1_element_r_coef){
     int cnt = 0;
     for(int n=0; n<n_Max_rank+1;++n){
@@ -64,21 +68,8 @@ int Calc_Nabla_1_emement_coef(double * Nabla_1_element_r_coef){
 	}
 	return 0;
 }
-/*
- * int calc_nabla_idx(){
- *     int shift = 0;
- *     for(int i3=2; i3<4; ++i3){
- *         for(int i2=0; i2<i3+1; ++i2){
- *             for(int i1=0; i1<i2+1; ++i1){
- *                 nabla_idx[i1][i2][i3-2] = shift;
- *                 ++shift;
- *             }
- *         }
- *     }
- *     return 0;
- * }
- */
 
+//Set the value for global invariables and initialize scratching arrays
 int configure_fmm(int Max_rank, unsigned long int n_ptc, unsigned long int n_box){
 
 	n_Max_rank = Max_rank;
@@ -95,15 +86,20 @@ int configure_fmm(int Max_rank, unsigned long int n_ptc, unsigned long int n_box
 	multipole_expns = new double[n_box*Number_of_total_element];
 	memset(multipole_expns, 0, n_box*Number_of_total_element*sizeof(double));
 
+    // Create an array to store all the local expansions of all the boxes
+	// the starting address for the i-th local is &multipole[i*Number_of_total_element], i counts from zero.
 	local_expns = new double[n_box*Number_of_total_element];
 	memset(local_expns, 0, n_box*Number_of_total_element*sizeof(double));
 
+    //Save the coefs for combination operator
     combination_coef = new double[Number_of_total_element];
     calc_combination_coef(combination_coef);
 
+    //Save the coefs for Nabla operator
     Nabla_1_element_r_coef = new double[Nabla_1_element_r_length[Max_rank]];
     Calc_Nabla_1_emement_coef(Nabla_1_element_r_coef);
 
+    //Use to save the power of x, y, z, r2 up to the max rank
     pow_x = new double[Max_rank+1];
     pow_y = new double[Max_rank+1];
     pow_z = new double[Max_rank+1];

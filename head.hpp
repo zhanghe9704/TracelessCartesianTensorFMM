@@ -2,6 +2,10 @@
 head.hpp
 List of the head files and global variables
 
+version 2.0
+By He Zhang, 03/06/2015
+More scratch variable added for better performance.
+
 version 1.0
 By He Huang & He Zhang, 12/29/2014
 

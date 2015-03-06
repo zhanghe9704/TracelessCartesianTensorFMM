@@ -2,6 +2,10 @@
 FMMKernel.cpp
 Define the Kernel functions for the multiple level fast multipole algorithm using tensors
 
+version 2.0
+By He Zhang, 03/06/2015
+All functions revised for better performance.
+
 version 1.0
 By He Huang & He Zhang, 12/29/2014
 
@@ -292,29 +296,7 @@ double MultipolePotential(double *Multipole, double Multi_x, double Multi_y, dou
 }
 
 
-//This function is used in the "Charge_to_Local" function.
-void Charge_to_Local_pre(double q, double old_x, double old_y, double old_z, double new_x, double new_y, double new_z, double *L_expansion)
-{
-	double x = old_x - new_x;
-	double y = old_y - new_y;
-	double z = old_z - new_z;
-    double r_2 = x * x + y * y + z * z;
-    double inv_r2 = 1.0/r_2;
-    double inv_r = sqrt(inv_r2);
-	for (int i = 0; i < Number_of_total_element; i++)
-	{
-		int n1 = index_n1[i];
-		int n2 = index_n2[i];
-		int n3 = index_n3[i];
-
-		int n = n1 + n2 + n3;
-
-		double r_coe = order_minus_one[n]* pow(inv_r2, n)*inv_r;
-
-		L_expansion[i] = q * Nabla_1_element_r(n1, n2, n3, n, x, y, z, r_2, r_coe);
-	}
-}
-
+//This function is used in the "Charge_to_Local_traceless" function.
 void Charge_to_Local_pre_traceless(double q, double old_x, double old_y, double old_z, double new_x, double new_y, double new_z, double *L_expansion)
 {
 	double x = old_x - new_x;
