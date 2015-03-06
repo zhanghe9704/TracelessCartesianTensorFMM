@@ -71,7 +71,7 @@ int main(){
 
 	unsigned long int N=1000000;
 	unsigned long int N_calc = 1000;
-	int n_ptc_box = 100;
+	int n_ptc_box = 50;
     int n_rank = 4;
 
 	double * x = new double[N];
@@ -82,25 +82,25 @@ int main(){
 	double * phi_check = new double[N];
 
 ////	 Generate random particle positions.
-	srand (time(NULL));
-	for(unsigned long int i=0;i<N;++i){
-		x[i] = rand();
-		y[i] = rand();
-		z[i] = rand();
-		q[i] = 1;
-	}
+//	srand (time(NULL));
+//	for(unsigned long int i=0;i<N;++i){
+//		x[i] = rand();
+//		y[i] = rand();
+//		z[i] = rand();
+//		q[i] = 1;
+//	}
 
 ////  normal distribution.
 //    // obtain a seed from the timer
-//    std::default_random_engine generator;
-//    generator.seed(time(NULL));
-//    std::normal_distribution<double> distribution(0.0,1.0);
-//    for(unsigned long int i=0;i<N;++i){
-//        x[i] = distribution(generator);
-//        y[i] = distribution(generator);
-//        z[i] = distribution(generator);
-//        q[i] = 1;
-//    }
+    std::default_random_engine generator;
+    generator.seed(time(NULL));
+    std::normal_distribution<double> distribution(0.0,1.0);
+    for(unsigned long int i=0;i<N;++i){
+        x[i] = distribution(generator);
+        y[i] = distribution(generator);
+        z[i] = distribution(generator);
+        q[i] = 1;
+    }
 
 	scale(x, N);
 	scale(y, N);

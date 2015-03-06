@@ -19,6 +19,11 @@ double * multipole_expns;
 double * local_expns;
 double * combination_coef;
 double * Nabla_1_element_r_coef;
+double * pow_x;
+double * pow_y;
+double * pow_z;
+double * pow_r2;
+
 //int nabla_idx[4][4][2]={0};
 
 int calc_combination_coef(double * combination_coef){
@@ -99,6 +104,15 @@ int configure_fmm(int Max_rank, unsigned long int n_ptc, unsigned long int n_box
     Nabla_1_element_r_coef = new double[Nabla_1_element_r_length[Max_rank]];
     Calc_Nabla_1_emement_coef(Nabla_1_element_r_coef);
 
+    pow_x = new double[Max_rank+1];
+    pow_y = new double[Max_rank+1];
+    pow_z = new double[Max_rank+1];
+    pow_r2 = new double[Max_rank+1];
+    memset(pow_x, 0, (Max_rank+1)*sizeof(double));
+    memset(pow_y, 0, (Max_rank+1)*sizeof(double));
+    memset(pow_z, 0, (Max_rank+1)*sizeof(double));
+    memset(pow_r2, 0, (Max_rank+1)*sizeof(double));
+
 	return 0;
 }
 
@@ -110,6 +124,10 @@ int end_fmm(){
 	delete[] scratch2;
 	delete[] combination_coef;
 	delete[] Nabla_1_element_r_coef;
+	delete[] pow_x;
+	delete[] pow_y;
+	delete[] pow_z;
+	delete[] pow_r2;
 
 	return 0;
 }

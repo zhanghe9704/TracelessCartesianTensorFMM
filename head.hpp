@@ -35,5 +35,10 @@ extern double * local_expns;
 extern double * combination_coef;
 extern double * Nabla_1_element_r_coef;
 
+extern double * pow_x;
+extern double * pow_y;
+extern double * pow_z;
+extern double * pow_r2;
+
 
 #endif

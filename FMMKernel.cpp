@@ -70,7 +70,8 @@ void Multipole_to_Multipole(double old_x, double old_y, double old_z, double new
                     if (new_y<old_y) coef *= (1 - (m2 % 2) * 2);
                     if (new_z<old_z) coef *= (1 - (m3 % 2) * 2);
 
-					New_M[i] += multipole_coef[cnt]*coef*Old_M[Find_index(n1 - m1, n2 - m2, n3 - m3)];
+					New_M[i] += multipole_coef[cnt]*coef*Old_M[find_index[n1 - m1][n2 - m2][n3 - m3]];
+//					New_M[i] += multipole_coef[cnt]*coef*Old_M[Find_index(n1 - m1, n2 - m2, n3 - m3)];
 					++cnt;
 				}
 			}
@@ -117,7 +118,7 @@ void update_multipole_to_multipole_coef(double * multipole_coef){
 				for (int m3 = 0; m3 <= n3; m3++)
 				{
 					int m = m1 + m2 + m3;
-					multipole_coef[cnt] *= pow(2,m);
+					multipole_coef[cnt] *= pow_two[m];
 					++cnt;
 				}
 			}
@@ -139,7 +140,7 @@ void Calc_Nabla_R(double boxsize, double * Nabla_R){
 
 void update_Nabla_R(double * Nabla_R){
     for(int n=0; n<n_Max_rank+1; ++n){
-        double k = pow(2,n+1);
+        double k = pow_two[n+1];
         for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
                 for(int j=0; j<16; ++j)   Nabla_R[i+j*Number_of_total_element] *= k;
         }
@@ -171,7 +172,8 @@ void Multipole_to_Local(double *Multipole_for_trans, double Multi_x, double Mult
             ni[1] = index_n2[i];
             ni[2] = index_n3[i];
             if (change==0) index = i;
-            else index = Find_index(ni[seq[0]],ni[seq[1]], ni[seq[2]]);
+            else index = find_index[ni[seq[0]]][ni[seq[1]]][ni[seq[2]]];
+//            else index = Find_index(ni[seq[0]],ni[seq[1]], ni[seq[2]]);
 
             coef = 1;
             if (ni[0]%2==1)    coef *= sign[0];
@@ -241,7 +243,7 @@ void Calc_Rho_Tensor(double boxsize, double * Rho_Tensor){
 
 void update_Rho_Tensor(double * Rho_Tensor){
     for(int n=0; n<n_Max_rank+1; ++n){
-        double k = pow(0.5,n);
+        double k = pow_half[n];
         for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
                 for(int j=0; j<8; ++j)   Rho_Tensor[i+j*Number_of_total_element] *= k;
         }
@@ -323,14 +325,25 @@ void Charge_to_Local_pre_traceless(double q, double old_x, double old_y, double 
     double inv_r = sqrt(inv_r2);
 
     int cnt=0;
+
+    pow_x[0] = 1;
+    pow_y[0] = 1;
+    pow_z[0] = 1;
+    pow_r2[0] = 1;
+
+    for(int i=1; i<n_Max_rank+1; ++i){
+        pow_x[i] = x*pow_x[i-1];
+        pow_y[i] = y*pow_y[i-1];
+        pow_z[i] = z*pow_z[i-1];
+        pow_r2[i] = r_2*pow_r2[i-1];
+    }
 	for(int n=0; n<n_Max_rank+1; ++n){
+        double r_coe = order_minus_one[n] * pow(inv_r2, n) * inv_r;
         for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
             int n1, n2, n3;
             n1 = index_n1[i];
             n2 = index_n2[i];
             n3 = index_n3[i];
-
-            double r_coe = order_minus_one[n] * pow(inv_r2, n) * inv_r;
 
             L_expansion[i] = q * Nabla_1_element_r(n1, n2, n3, n, x, y, z, r_2, r_coe, cnt, Nabla_1_element_r_coef);
         }

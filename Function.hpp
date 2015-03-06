@@ -11,7 +11,7 @@ By He Huang & He Zhang, 12/29/2014
 #ifndef FUNCTION_HPP
 #define FUNCTION_HPP
 
-int Find_index(int n1, int n2, int n3);
+//int Find_index(int n1, int n2, int n3);
 int sequence3 (int x[3], int idx[3]);
 //double combination(int n, int m);
 //double combination_HH(int n, int m);
