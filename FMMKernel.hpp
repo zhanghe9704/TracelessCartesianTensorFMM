@@ -17,6 +17,7 @@ By He Huang & He Zhang, 12/29/2014
 #define FMMKERNEL_HPP
 
 #include "box.hpp"
+#include "head.hpp"
 
 //Calculate the multipole from charges inside a childless box
 void Charge_to_Multipole(Box & box, double *Charge, double *Charge_x, double *Charge_y, double *Charge_z, unsigned long int *ptclist, double *Born_Multipole);
@@ -50,5 +51,9 @@ void Charge_to_Local_traceless(Box &box, unsigned long int * ptclist, double *q,
 
 //Calculate the Coulomb potential from the local expansion of a childless box
 double LocalPotential(double *Local_expan, double Local_x, double Local_y, double Local_z, double observer_x, double observer_y, double observer_z);
+
+void MultipoleField(double *Multipole, double Multi_x, double Multi_y, double Multi_z, double Poten_x, double Poten_y, double Poten_z, double &Ex, double &Ey, double &Ez);
+
+void LocalField(double *Local_expan, double Local_x, double Local_y, double Local_z, double observer_x, double observer_y, double observer_z, double &Ex, double &Ey, double &Ez);
 
 #endif

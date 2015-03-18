@@ -33,11 +33,13 @@ extern int n_Max_rank, Number_of_total_element;
 extern unsigned long int Number_of_particle;
 extern double *scratch;
 extern double *scratch2;
+extern double *scratch3;
 extern unsigned long int *ptclist;
 extern double * multipole_expns;
 extern double * local_expns;
 extern double * combination_coef;
 extern double * Nabla_1_element_r_coef;
+extern double * Nabla_1_element_dr_coef;
 
 extern double * pow_x;
 extern double * pow_y;

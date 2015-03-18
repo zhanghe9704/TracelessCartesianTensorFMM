@@ -26,11 +26,13 @@ int Coulomb(double * x,double * y,double * z,double * q, unsigned long int n_ptc
 
     memset(phi, 0, n_calc*sizeof(double));
 
-    double r = 0;
     for(unsigned long int i=0; i<n_calc; ++i){
         for(unsigned long int j=0; j<n_ptc; ++j){
             if(i!=j){
-                r = sqrt(pow(x[i]-x[j],2)+pow(y[i]-y[j],2)+pow(z[i]-z[j],2));
+                double dx = x[i]-x[j];
+                double dy = y[i]-y[j];
+                double dz = z[i]-z[j];
+                double r = sqrt(dx*dx+dy*dy+dz*dz);
                 phi[i] += q[j]/r;
             }
         }
@@ -38,6 +40,36 @@ int Coulomb(double * x,double * y,double * z,double * q, unsigned long int n_ptc
 
     return 0;
 }
+
+int Coulomb(double * x,double * y,double * z,double * q, unsigned long int n_ptc, unsigned long int n_calc,double * Ex, double * Ey, double * Ez){
+
+    if(n_calc>n_ptc){
+        cout<<"Error! in Coulomb"<<endl;
+        return 1;
+    }
+
+    memset(Ex, 0, n_calc*sizeof(double));
+    memset(Ey, 0, n_calc*sizeof(double));
+    memset(Ez, 0, n_calc*sizeof(double));
+
+    for(unsigned long int i=0; i<n_calc; ++i){
+        for(unsigned long int j=0; j<n_ptc; ++j){
+            if(i!=j){
+                double dx = x[i]-x[j];
+                double dy = y[i]-y[j];
+                double dz = z[i]-z[j];
+                double r = dx*dx+dy*dy+dz*dz;
+                r *= sqrt(r);
+                Ex[i] += q[j]*dx/r;
+                Ey[i] += q[j]*dy/r;
+                Ez[i] += q[j]*dz/r;
+            }
+        }
+    }
+
+    return 0;
+}
+
 
 int scale(double *x, unsigned long int n){
 	double max_x = x[0];
@@ -66,12 +98,25 @@ double error(double * phi, double * phi_fmm, unsigned long int n){
     return sqrt(sum_dphi/sum_phi);
 }
 
+double error(double * Ex, double * Ey, double * Ez, double * Ex_fmm, double * Ey_fmm, double * Ez_fmm, unsigned long int n){
+    double sum_phi = 0;
+    double sum_dphi = 0;
+    for(unsigned long int i=0; i<n; ++i){
+        sum_phi += Ex[i]*Ex[i]+Ey[i]*Ey[i]+Ez[i]*Ez[i];
+        double dex = Ex[i]-Ex_fmm[i];
+        double dey = Ey[i]-Ey_fmm[i];
+        double dez = Ez[i]-Ez_fmm[i];
+        sum_dphi += dex*dex+dey*dey+dez*dez;
+    }
+    return sqrt(sum_dphi/sum_phi);
+}
+
 
 int main(){
 
-	unsigned long int N=1000000;
-	unsigned long int N_calc = 1000;
-	int n_ptc_box = 50;
+	unsigned long int N=20;
+	unsigned long int N_calc = 20;
+	int n_ptc_box = 1;
     int n_rank = 4;
 
 	double * x = new double[N];
@@ -80,7 +125,13 @@ int main(){
 	double * q = new double[N];
 	double * phi = new double[N];
 	double * phi_check = new double[N];
-
+	double * Ex = new double[N];
+	double * Ey = new double[N];
+	double * Ez = new double[N];
+	double * Ex_check = new double[N];
+	double * Ey_check = new double[N];
+	double * Ez_check = new double[N];
+//
 ////	 Generate random particle positions.
 //	srand (time(NULL));
 //	for(unsigned long int i=0;i<N;++i){
@@ -92,39 +143,70 @@ int main(){
 
 ////  normal distribution.
 //    // obtain a seed from the timer
-    std::default_random_engine generator;
-    generator.seed(time(NULL));
-    std::normal_distribution<double> distribution(0.0,1.0);
-    for(unsigned long int i=0;i<N;++i){
-        x[i] = distribution(generator);
-        y[i] = distribution(generator);
-        z[i] = distribution(generator);
-        q[i] = 1;
-    }
-
-	scale(x, N);
-	scale(y, N);
-	scale(z, N);
-	cout<<N<<" particles initialized!"<<endl;
-//
-//	char filename[30] = "xyz.txt";
-////    std::ofstream outfile;
-////    outfile.open(filename);
-////    for(unsigned long int i=0;i<N;++i){
-////        outfile<<x[i]<<' '<<y[i]<<' '<<z[i]<<endl;
-////    }
-////    outfile.close();
-////    return 0;
-//
-//    std::ifstream infile;
-//    infile.open(filename);
-//    for(unsigned long int i=0; i<N; ++i){
-//        infile>>x[i];
-//        infile>>y[i];
-//        infile>>z[i];
+//    std::default_random_engine generator;
+//    generator.seed(time(NULL));
+//    std::normal_distribution<double> distribution(0.0,1.0);
+//    for(unsigned long int i=0;i<N;++i){
+//        x[i] = distribution(generator);
+//        y[i] = distribution(generator);
+//        z[i] = distribution(generator);
 //        q[i] = 1;
 //    }
-//    infile.close();
+//
+//	scale(x, N);
+//	scale(y, N);
+//	scale(z, N);
+//	cout<<N<<" particles initialized!"<<endl;
+
+
+
+//	char filename[30] = "xyz.txt";
+//    std::ofstream outfile;
+//    outfile.open(filename);
+//    for(unsigned long int i=0;i<N;++i){
+//        outfile<<x[i]<<' '<<y[i]<<' '<<z[i]<<endl;
+//    }
+//    outfile.close();
+
+
+////load particles from file
+    char filename_xyz[30] = "xyz.txt";
+    std::ifstream infile;
+    infile.open(filename_xyz);
+    cout<<"start to read data ..."<<endl;
+    for(unsigned long int i=0; i<N; ++i){
+        infile>>x[i];
+        infile>>y[i];
+        infile>>z[i];
+        q[i] = 1;
+    }
+    infile.close();
+
+    cout<<N<<" particles initialized!"<<endl;
+
+
+
+    cout<<"Start FMM for field ... "<<endl;
+    fmm(x,  y,  z,  q, N, n_rank, n_ptc_box, Ex, Ey, Ez);
+    cout<<"End FMM!"<<endl;
+    Coulomb(x,y,z,q,N,N_calc,Ex_check, Ey_check, Ez_check);
+    cout<<"Error: "<<error(Ex_check,Ey_check,Ez_check,Ex,Ey,Ez,N_calc)<<endl;
+
+    cout<<"Start FMM for potential... "<<endl;
+    fmm(x,  y,  z,  q, N, n_rank, n_ptc_box, phi);
+    cout<<"End FMM!"<<endl;
+    Coulomb(x,y,z,q,N,N_calc,phi_check);
+    cout<<"Error: "<<error(phi_check,phi,N_calc)<<endl;
+
+//    char filename[30] = "check_field.txt";
+//    std::ofstream outfile;
+//    outfile.open(filename);
+//    for(unsigned long int i=0;i<N_calc;++i){
+//        outfile<<Ex[i]<<' '<<Ey[i]<<' '<<Ez[i]<<' '<<Ex_check[i]<<' '<<Ey_check[i]<<' '<<Ez_check[i]<<' '<<endl;
+//    }
+//    outfile.close();
+
+    return 0;
 
     std::chrono::steady_clock::time_point start, end;
 
@@ -170,6 +252,12 @@ int main(){
     delete[] q;
     delete[] phi;
     delete[] phi_check;
+    delete[] Ex;
+    delete[] Ey;
+    delete[] Ez;
+    delete[] Ex_check;
+    delete[] Ey_check;
+    delete[] Ez_check;
 	system("pause");
 	return 0;
 }

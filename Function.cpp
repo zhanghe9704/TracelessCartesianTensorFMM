@@ -111,6 +111,75 @@ double Nabla_1_element_r(int n1, int n2, int n3, int n, double x, double y, doub
 	return one_element;
 }
 
+//Take derivative of the tensor/operator Nabla 1/r for a given r
+void Nabla_1_element_r_dr(int n1, int n2, int n3, int n, double x, double y, double z, double r_2, double r_coe, int &cnt, double * coef, double * one_element)
+{
+	int nn[3] = {n1,n2,n3};
+	double c1[3] = {1/x, 1/y, 1/z};
+	double c2[3] = {x/r_2, y/r_2, z/r_2};
+	int c3 = -2*n-1;
+
+	for(int i=0; i<3; ++i) one_element[i] = 0;
+
+	for (int m1 = 0; m1 <= (n1 / 2); m1++){
+		for (int m2 = 0; m2 <= (n2 / 2); m2++){
+			for (int m3 = 0; m3 <= (n3 / 2); m3++){
+				int m = m1 + m2 + m3;
+                int mm[3] = {m1,m2,m3};
+				double tmp = coef[cnt] * pow_r2[m]*pow_x[n1 - 2 * m1]*pow_y[n2 - 2 * m2]*pow_z[n3 - 2 * m3];
+				for(int id=0; id<3; ++id){
+                    double tmp2 = tmp*((nn[id] - 2*mm[id])*c1[id]+(c3+2*m)*c2[id]);
+                    one_element[id] += tmp2;
+				}
+				++cnt;
+			}
+		}
+	}
+
+	for(int i=0; i<3; ++i) one_element[i] *= r_coe;
+}
+
+
+//Calculate the derivative of the tensor Nabla 1/r for a give r(x,y,z)
+void Nabla_r_dr(double x, double y, double z, double * coef, double *Nabla_x, double *Nabla_y, double *Nabla_z)
+{
+    double r_2 = x*x + y*y + z*z;
+    double inv_r2 = 1.0/r_2;
+    double inv_r = sqrt(inv_r2);
+
+    pow_x[0] = 1;
+    pow_y[0] = 1;
+    pow_z[0] = 1;
+    pow_r2[0] = 1;
+
+    for(int i=1; i<n_Max_rank+1; ++i){
+        pow_x[i] = x*pow_x[i-1];
+        pow_y[i] = y*pow_y[i-1];
+        pow_z[i] = z*pow_z[i-1];
+        pow_r2[i] = r_2*pow_r2[i-1];
+    }
+
+    //Calculate the first 2n+1 elements for each rank n
+    int cnt = 0;
+    double one_element[3] = {0,0,0};
+	for(int n=0; n<n_Max_rank+1; ++n){
+        double r_coe = order_minus_one[n] * pow(inv_r2, n) * inv_r;
+        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
+            int n1, n2, n3;
+            n1 = index_n1[i];
+            n2 = index_n2[i];
+            n3 = index_n3[i];
+
+            Nabla_1_element_r_dr(n1, n2, n3, n, x, y, z, r_2, r_coe, cnt, coef, one_element);
+            Nabla_x[i] = one_element[0];
+            Nabla_y[i] = one_element[1];
+            Nabla_z[i] = one_element[2];
+        }
+	}
+}
+
+
+
 //Calculate the tensor Nabla 1/r for a give r(x,y,z)
 void Nabla_r_traceless(double x, double y, double z, double * coef, double *Nabla_R)
 {
@@ -278,4 +347,23 @@ void Contraction_traceless(double *High_rank_Tensor, double *Low_rank_Tensor, do
 
 }
 
+//Take derivative before contraction of two tensors of the same rank
+void Contraction_dr(double * Tensor1, double * Tensor2, int n, double x, double y, double z, double &cx, double &cy, double &cz){
+    double tmp[3] = {0,0,0};
+    double coef[3] = {1/x, 1/y, 1/z};
+    int ni[3];
+    for(int i = n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
+        ni[0] = index_n1[i];
+        ni[1] = index_n2[i];
+        ni[2] = index_n3[i];
+
+        for(int id=0; id<3; ++id) {
+                if (ni[id]>0) tmp[id] += coef[id]*ni[id]*combination_coef[i] * Tensor1[i] * Tensor2[i];
+        }
+    }
+
+    cx += tmp[0];
+    cy += tmp[1];
+    cz += tmp[2];
+}
 

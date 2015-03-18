@@ -18,11 +18,13 @@ int n_Max_rank, Number_of_total_element;
 unsigned long int Number_of_particle;
 double * scratch;
 double * scratch2;
+double * scratch3;
 unsigned long int * ptclist;
 double * multipole_expns;
 double * local_expns;
 double * combination_coef;
 double * Nabla_1_element_r_coef;
+double * Nabla_1_element_dr_coef;
 double * pow_x;
 double * pow_y;
 double * pow_z;
@@ -69,6 +71,35 @@ int Calc_Nabla_1_emement_coef(double * Nabla_1_element_r_coef){
 	return 0;
 }
 
+//Calculate the coefs for Nabla operator, symmetric, not traceless, used for field calculation.
+int Calc_Nabla_1_emement_coef_dr(double * Nabla_1_element_r_coef){
+    int cnt = 0;
+    for(int n=0; n<n_Max_rank+1;++n){
+
+		for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
+			int n1, n2, n3;
+			n1 = index_n1[i];
+            n2 = index_n2[i];
+            n3 = index_n3[i];
+
+            for (int m1 = 0; m1 <= (n1 / 2); m1++)
+                {
+                for (int m2 = 0; m2 <= (n2 / 2); m2++)
+                {
+                    for (int m3 = 0; m3 <= (n3 / 2); m3++)
+                    {
+                        int m = m1 + m2 + m3;
+                        Nabla_1_element_r_coef[cnt] = order_minus_one[m] * combination_HH[n1][m1] * combination_HH[n2][m2] *combination_HH[n3][m3] * Factorial_odd[n - m] ;
+                        ++cnt;
+                    }
+                }
+            }
+		}
+	}
+	return 0;
+}
+
+
 //Set the value for global invariables and initialize scratching arrays
 int configure_fmm(int Max_rank, unsigned long int n_ptc, unsigned long int n_box){
 
@@ -80,6 +111,8 @@ int configure_fmm(int Max_rank, unsigned long int n_ptc, unsigned long int n_box
 	memset(scratch, 0, Number_of_total_element*sizeof(double));
 	scratch2 = new double[Number_of_total_element];
 	memset(scratch2, 0, Number_of_total_element*sizeof(double));
+	scratch3 = new double[Number_of_total_element];
+	memset(scratch3, 0, Number_of_total_element*sizeof(double));
 
     // Create an array to store all the multipole expansions of all the boxes
 	// the starting address for the i-th multipole is &multipole[i*Number_of_total_element], i counts from zero.
@@ -96,8 +129,8 @@ int configure_fmm(int Max_rank, unsigned long int n_ptc, unsigned long int n_box
     calc_combination_coef(combination_coef);
 
     //Save the coefs for Nabla operator
-    Nabla_1_element_r_coef = new double[Nabla_1_element_r_length[Max_rank]];
-    Calc_Nabla_1_emement_coef(Nabla_1_element_r_coef);
+//    Nabla_1_element_r_coef = new double[Nabla_1_element_r_length[Max_rank]];
+//    Calc_Nabla_1_emement_coef(Nabla_1_element_r_coef);
 
     //Use to save the power of x, y, z, r2 up to the max rank
     pow_x = new double[Max_rank+1];
@@ -118,8 +151,9 @@ int end_fmm(){
 	delete[] multipole_expns;
 	delete[] local_expns;
 	delete[] scratch2;
+	delete[] scratch3;
 	delete[] combination_coef;
-	delete[] Nabla_1_element_r_coef;
+//	delete[] Nabla_1_element_r_coef;
 	delete[] pow_x;
 	delete[] pow_y;
 	delete[] pow_z;

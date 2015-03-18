@@ -42,4 +42,13 @@ double Contraction_equal_rank(double * Tensor1, double * Tensor2, int n);
 //Detracer operator, convert a totally symmetric tensor into a traceless totally symmetric tensor. Not used in current version.
 void detracer(double * symmetric_tensor, double * traceless_tensor);
 
+
+//Take derivative before contraction of two tensors of the same rank
+void Contraction_dr(double * Tensor1, double * Tensor2, int n, double x, double y, double z, double &cx, double &cy, double &cz);
+
+//Take derivative of the tensor/operator Nabla 1/r for a given r
+void Nabla_1_element_r_dr(int n1, int n2, int n3, int n, double x, double y, double z, double r_2, double r_coe, int &cnt, double * coef, double * one_element);
+
+//Calculate the derivative of the tensor Nabla 1/r for a give r(x,y,z)
+void Nabla_r_dr(double x, double y, double z, double * coef, double *Nabla_x, double *Nabla_y, double *Nabla_z);
 #endif

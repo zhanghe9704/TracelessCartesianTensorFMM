@@ -18,6 +18,7 @@ By He Zhang, 02/2015
 #include <utility>
 #include <cstdlib>
 #include <cmath>
+#include <cstring>
 
 using std::vector;
 using std::cout;
