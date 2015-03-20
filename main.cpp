@@ -117,7 +117,7 @@ int main(){
 	unsigned long int N=20;
 	unsigned long int N_calc = 20;
 	int n_ptc_box = 1;
-    int n_rank = 4;
+    int n_rank = 6;
 
 	double * x = new double[N];
 	double * y = new double[N];

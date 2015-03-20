@@ -297,28 +297,47 @@ double MultipolePotential(double *Multipole, double Multi_x, double Multi_y, dou
 
 void MultipoleField(double *Multipole, double Multi_x, double Multi_y, double Multi_z, double Poten_x, double Poten_y, double Poten_z, double &Ex, double &Ey, double &Ez)
 {
-	double M_ex = 0;
-	double M_ey = 0;
-	double M_ez = 0;
 
-	double *Nabla_x = scratch;
-	memset(Nabla_x, 0, Number_of_total_element * sizeof(double));
-	double *Nabla_y = scratch2;
-	memset(Nabla_y, 0, Number_of_total_element * sizeof(double));
-	double *Nabla_z = scratch3;
-	memset(Nabla_z, 0, Number_of_total_element * sizeof(double));
-	Nabla_r_dr(Poten_x-Multi_x, Poten_y-Multi_y, Poten_z-Multi_z, Nabla_1_element_dr_coef, Nabla_x, Nabla_y, Nabla_z);
 
-	for (int n_rank = 0; n_rank <= n_Max_rank; n_rank++){
-        M_ex += Contraction_equal_rank(Multipole, Nabla_x, n_rank);
-        M_ey += Contraction_equal_rank(Multipole, Nabla_y, n_rank);
-        M_ez += Contraction_equal_rank(Multipole, Nabla_z, n_rank);
+	double * Field = scratch2;
+
+	double *Nabla_R = scratch;
+	memset(Nabla_R, 0, Number_of_total_element * sizeof(double));
+	Nabla_r_traceless(Poten_x-Multi_x, Poten_y-Multi_y, Poten_z-Multi_z, Nabla_1_element_r_coef, Nabla_R);
+
+	for (int n = 0; n < n_Max_rank; n++){
+        Contraction_traceless(Nabla_R,Multipole,Field,n+1,n);
+        Ex -= Field[1];
+        Ey -= Field[2];
+        Ez -= Field[3];
 	}
-
-	Ex -= M_ex;
-	Ey -= M_ey;
-	Ez -= M_ez;
 }
+
+//
+//void MultipoleField_dr(double *Multipole, double Multi_x, double Multi_y, double Multi_z, double Poten_x, double Poten_y, double Poten_z, double &Ex, double &Ey, double &Ez)
+//{
+//	double M_ex = 0;
+//	double M_ey = 0;
+//	double M_ez = 0;
+//
+//	double *Nabla_x = scratch;
+//	memset(Nabla_x, 0, Number_of_total_element * sizeof(double));
+//	double *Nabla_y = scratch2;
+//	memset(Nabla_y, 0, Number_of_total_element * sizeof(double));
+//	double *Nabla_z = scratch3;
+//	memset(Nabla_z, 0, Number_of_total_element * sizeof(double));
+//	Nabla_r_dr(Poten_x-Multi_x, Poten_y-Multi_y, Poten_z-Multi_z, Nabla_1_element_dr_coef, Nabla_x, Nabla_y, Nabla_z);
+//
+//	for (int n_rank = 0; n_rank <= n_Max_rank; n_rank++){
+//        M_ex += Contraction_equal_rank(Multipole, Nabla_x, n_rank);
+//        M_ey += Contraction_equal_rank(Multipole, Nabla_y, n_rank);
+//        M_ez += Contraction_equal_rank(Multipole, Nabla_z, n_rank);
+//	}
+//
+//	Ex -= M_ex;
+//	Ey -= M_ey;
+//	Ez -= M_ez;
+//}
 
 
 //This function is used in the "Charge_to_Local_traceless" function.

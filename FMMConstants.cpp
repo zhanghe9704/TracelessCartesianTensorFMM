@@ -18,13 +18,13 @@ int n_Max_rank, Number_of_total_element;
 unsigned long int Number_of_particle;
 double * scratch;
 double * scratch2;
-double * scratch3;
+//double * scratch3;
 unsigned long int * ptclist;
 double * multipole_expns;
 double * local_expns;
 double * combination_coef;
 double * Nabla_1_element_r_coef;
-double * Nabla_1_element_dr_coef;
+//double * Nabla_1_element_dr_coef;
 double * pow_x;
 double * pow_y;
 double * pow_z;
@@ -111,8 +111,8 @@ int configure_fmm(int Max_rank, unsigned long int n_ptc, unsigned long int n_box
 	memset(scratch, 0, Number_of_total_element*sizeof(double));
 	scratch2 = new double[Number_of_total_element];
 	memset(scratch2, 0, Number_of_total_element*sizeof(double));
-	scratch3 = new double[Number_of_total_element];
-	memset(scratch3, 0, Number_of_total_element*sizeof(double));
+//	scratch3 = new double[Number_of_total_element];
+//	memset(scratch3, 0, Number_of_total_element*sizeof(double));
 
     // Create an array to store all the multipole expansions of all the boxes
 	// the starting address for the i-th multipole is &multipole[i*Number_of_total_element], i counts from zero.
@@ -151,7 +151,7 @@ int end_fmm(){
 	delete[] multipole_expns;
 	delete[] local_expns;
 	delete[] scratch2;
-	delete[] scratch3;
+//	delete[] scratch3;
 	delete[] combination_coef;
 //	delete[] Nabla_1_element_r_coef;
 	delete[] pow_x;

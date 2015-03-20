@@ -539,9 +539,9 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
 
     calc_multipole(tree, q, x, y, z);
 
-    //Save the coefs for derivative of Nabla operator
-    Nabla_1_element_dr_coef = new double[Nabla_1_element_dr_coef_length[n_Max_rank]];
-    Calc_Nabla_1_emement_coef_dr(Nabla_1_element_dr_coef);
+//    //Save the coefs for derivative of Nabla operator
+//    Nabla_1_element_dr_coef = new double[Nabla_1_element_dr_coef_length[n_Max_rank]];
+//    Calc_Nabla_1_emement_coef_dr(Nabla_1_element_dr_coef);
 
     //set zero for output field
     memset(Ex, 0, n_ptc*sizeof(double));
@@ -587,7 +587,7 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
     delete[] Rho_Tensor;
     delete[] Nabla_R;
     delete[] Nabla_1_element_r_coef;
-    delete[] Nabla_1_element_dr_coef;
+//    delete[] Nabla_1_element_dr_coef;
 	end_fmm();
 
 
@@ -596,3 +596,97 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
     return 0;
 }
 
+
+
+//
+//int fmm_dr(double * x, double * y, double * z, double * q, unsigned long int n_ptc, int max_rank, int n_ptc_box, double * Ex, double * Ey, double * Ez){
+//
+//    vector<Box> tree;
+//	vector<Colleague> clg;
+//
+//
+//    //initialize ptclist, which records the particles in each childless box
+//	ptclist = new unsigned long int[n_ptc];
+//	memset(ptclist, 0, n_ptc*sizeof(unsigned long int));
+//
+//	create_tree(x,y,z,n_ptc, n_ptc_box, tree, ptclist);
+//
+//    configure_fmm(max_rank, n_ptc, tree.size());
+//
+//	create_colleague(tree, clg);
+//
+//    std::ofstream output;
+//	char filename[30] = "output.txt";
+//	output.open(filename);
+//
+//    int i=0;
+//	for(auto iter=tree.begin(); iter!=tree.end(); ++iter) {
+//        output<<i<<endl<<*iter;
+//        ++i;
+//	}
+//	output.close();
+//
+//
+//    //Save the coefs for Nabla operator
+//    Nabla_1_element_r_coef = new double[Nabla_1_element_r_length[n_Max_rank]];
+//    Calc_Nabla_1_emement_coef(Nabla_1_element_r_coef);
+//
+//    calc_multipole(tree, q, x, y, z);
+//
+//    //Save the coefs for derivative of Nabla operator
+//    Nabla_1_element_dr_coef = new double[Nabla_1_element_dr_coef_length[n_Max_rank]];
+//    Calc_Nabla_1_emement_coef_dr(Nabla_1_element_dr_coef);
+//
+//    //set zero for output field
+//    memset(Ex, 0, n_ptc*sizeof(double));
+//    memset(Ey, 0, n_ptc*sizeof(double));
+//    memset(Ez, 0, n_ptc*sizeof(double));
+//
+//    double * Rho_Tensor = new double[8*Number_of_total_element];
+//    double current_parentbox_size = 0.5*tree[0].box_size;
+//    Calc_Rho_Tensor(current_parentbox_size,Rho_Tensor);
+//
+//    double * Nabla_R = new double[16*Number_of_total_element];
+//    double  current_boxsize = 0.25*tree[0].box_size;
+//    Calc_Nabla_R(current_boxsize,Nabla_R);
+//
+//
+//
+//    for(unsigned long int itr=1; itr<tree.size();++itr){
+//        unsigned long int parent_idx = tree[itr].parent;
+//
+//        if(parent_idx>0){
+//            if(tree[parent_idx].box_size<0.75*current_parentbox_size) {
+//                    update_Rho_Tensor(Rho_Tensor);
+//                    current_parentbox_size = tree[parent_idx].box_size;
+//            }
+//            local_exp_from_parent(parent_idx, tree[parent_idx], itr, tree[itr], Rho_Tensor);   //Inherit the local expansion from the parent box
+//            for(int i=0; clg[parent_idx].clg[i]>0;++i){     //Check all the child boxes of the colleagues of b's parent box
+//                unsigned long int clg_idx = clg[parent_idx].clg[i];
+//                check_colleague_child(tree, itr, clg_idx, current_boxsize, Nabla_R, x, y, z, q, Ex, Ey, Ez);
+//            }
+//        }
+//        else{
+//            check_colleague_child(tree, itr, parent_idx, current_boxsize, Nabla_R, x, y, z, q, Ex, Ey, Ez);
+//        }
+//
+//        if(tree[itr].n_child==0){
+//            Coulomb_field(tree[itr],x,y,z,q,Ex,Ey,Ez);
+//            Childless_box_field(itr, tree[itr], x, y, z, q, Ex,Ey,Ez);
+//        }
+//
+//    }
+//
+//    delete[] ptclist;
+//    delete[] Rho_Tensor;
+//    delete[] Nabla_R;
+//    delete[] Nabla_1_element_r_coef;
+//    delete[] Nabla_1_element_dr_coef;
+//	end_fmm();
+//
+//
+//
+//
+//    return 0;
+//}
+//
