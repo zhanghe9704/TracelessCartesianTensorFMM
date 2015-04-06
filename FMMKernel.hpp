@@ -2,6 +2,10 @@
 FMMKernel.hpp
 Declare the Kernel functions for the multiple level fast multipole algorithm using tensors
 
+version 3.0
+By He Zhang & He Huang, 04/06/2015
+Calculate 3D field.
+
 version 2.0
 By He Zhang, 03/06/2015
 All functions revised for better performance.

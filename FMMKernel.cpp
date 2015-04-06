@@ -2,6 +2,11 @@
 FMMKernel.cpp
 Define the Kernel functions for the multiple level fast multipole algorithm using tensors
 
+version 3.0
+By He Zhang & He Huang, 04/06/2015
+Calculate 3D field.
+Fixed a bug in Charge_2_pre().
+
 version 2.0
 By He Zhang, 03/06/2015
 All functions revised for better performance.
@@ -23,7 +28,7 @@ void Charge_2_M_pre(double Charge, double Multipole_x, double Multipole_y, doubl
 	double y = Charge_y - Multipole_y;
 	double z = Charge_z - Multipole_z;
 
-    Symmetric_Tensor(x,y,z,Born_Multipole_pre);
+    Symmetric_Tensor_C2M(Charge,x,y,z,Born_Multipole_pre);
 }
 
 void Charge_to_Multipole(Box & box, double *Charge, double *Charge_x, double *Charge_y, double *Charge_z, unsigned long int *ptclist, double *Born_Multipole){
@@ -299,14 +304,15 @@ void MultipoleField(double *Multipole, double Multi_x, double Multi_y, double Mu
 {
 
 
-	double * Field = scratch2;
-
+	double *Field = scratch2;
+//    memset(Field, 0, Number_of_total_element * sizeof(double));
 	double *Nabla_R = scratch;
 	memset(Nabla_R, 0, Number_of_total_element * sizeof(double));
 	Nabla_r_traceless(Poten_x-Multi_x, Poten_y-Multi_y, Poten_z-Multi_z, Nabla_1_element_r_coef, Nabla_R);
 
-	for (int n = 0; n < n_Max_rank; n++){
-        Contraction_traceless(Nabla_R,Multipole,Field,n+1,n);
+	for (int i = 0; i < n_Max_rank; ++i){
+        Contraction_traceless(Nabla_R,Multipole,Field,i+1,i);
+//        Contraction(Nabla_R,Multipole,Field,i+1,i);
         Ex -= Field[1];
         Ey -= Field[2];
         Ez -= Field[3];
@@ -436,7 +442,9 @@ void LocalField(double *Local_expan, double Local_x, double Local_y, double Loca
 	memset(SymmeticTensor, 0, Number_of_total_element*sizeof(double));
 	Symmetric_Tensor(dx, dy, dz, SymmeticTensor);
 
-	for (int i = 1; i <= n_Max_rank; ++i) Contraction_dr(Local_expan, SymmeticTensor,i, dx, dy, dz, L_ex, L_ey, L_ez);
+//	for (int i = 1; i <= n_Max_rank; ++i) Contraction_dr(Local_expan, SymmeticTensor,i, dx, dy, dz, L_ex, L_ey, L_ez);
+
+    Contraction_dr(Local_expan, SymmeticTensor,n_Max_rank, dx, dy, dz, L_ex, L_ey, L_ez);
 
 	Ex -= L_ex;
 	Ey -= L_ey;

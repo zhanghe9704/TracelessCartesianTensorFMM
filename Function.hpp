@@ -2,6 +2,9 @@
 Function.cpp
 Declare the math functions used in the kernel functions for the multiple level fast multipole algorithm using tensors
 
+version 3.0
+By He Zhang 04/06/2015
+Add functions needed for field calculation.
 
 version 2.0
 By He Zhang 03/06/2015
@@ -21,6 +24,9 @@ int sequence3 (int x[3], int idx[3]);
 
 //Calculate the totally symmetric tensor r^n
 void Symmetric_Tensor(double x, double y, double z, double *SymmeticTensor);
+
+//Calculate the totally symmetric tensor r^n times charge Q for charge to multipole calculation
+void Symmetric_Tensor_C2M(double q, double x, double y, double z, double *SymmetricTensor);
 
 //Calculate the value of a specific element of the tensor/operator Nabla 1/r
 double Nabla_1_element_r(int n1, int n2, int n3, int n, double x, double y, double z, double r_2, double r_coe, int &cnt, double * coef);
@@ -52,3 +58,5 @@ void Nabla_1_element_r_dr(int n1, int n2, int n3, int n, double x, double y, dou
 //Calculate the derivative of the tensor Nabla 1/r for a give r(x,y,z)
 void Nabla_r_dr(double x, double y, double z, double * coef, double *Nabla_x, double *Nabla_y, double *Nabla_z);
 #endif
+
+void Contraction(double *High_rank_Tensor, double *Low_rank_Tensor, double *HL_rank_Tensor, int m, int n);

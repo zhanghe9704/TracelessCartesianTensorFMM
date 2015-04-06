@@ -2,6 +2,11 @@
 box.cpp
 Define functions to manipulate the box structure
 
+version 1.1
+By He Zhang,04/06/2015
+Fixed the following bug:
+    Wrong criterion for ill-separated boxes
+
 version 1.0
 By He Zhang, 02/2014
 
@@ -165,9 +170,9 @@ int separate(Box &box1, Box &box2){
 	for(int i=0; i<3; ++i){
 		distance[i] = fabs(box1.center[i]-box2.center[i]);
 	}
-
+    small_size = small_size+0.5*large_size;
 	large_size = 1.5*large_size;
-	small_size = 1.5*small_size;
+
 	if ((distance[0]>large_size)+(distance[1]>large_size)+(distance[2]>large_size)){
 		return 2;
 	}
@@ -245,6 +250,8 @@ std::ostream& operator<<(std::ostream& os, Box& box){
 	os << endl;
 
 	os<<"Particles: " << box.n_ptcl <<' ' << box.first_ptcl<<endl;
+
+	return os;
 }
 
 //output colleague for debug
@@ -252,5 +259,7 @@ std::ostream& operator<<(std::ostream& os, Colleague& clg){
 	os<<clg.clg[0]<<' ';
 	for(int i=1; clg.clg[i]>0; ++i) os<<clg.clg[i]<<' ';
 	os<<endl;
+
+	return os;
 }
 

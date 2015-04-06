@@ -2,6 +2,7 @@
 FMMConstants.cpp
 Define and initialize the constants used in the kernel functions for the multiple level fast multipole algorithm using tensors
 
+
 version 2.0
 By He Zhang 03/06/2015
 Added more scratch variables

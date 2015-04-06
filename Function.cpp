@@ -2,6 +2,10 @@
 Function.cpp
 Define the math functions used in the kernel functions for the multiple level fast multipole algorithm using tensors
 
+version 3.0
+By He Zhang 04/06/2015
+Add functions needed for field calculation.
+
 version 2.0
 By He Zhang 03/06/2015
 All functions revised and more functions added for better performance.
@@ -48,6 +52,36 @@ void Symmetric_Tensor(double x, double y, double z, double *SymmetricTensor){
         SymmetricTensor[1] = x;
         SymmetricTensor[2] = y;
         SymmetricTensor[3] = z;
+    }
+    double r2 = x*x+y*y+z*z;
+    for(int n=2; n<n_Max_rank+1; ++n){
+        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
+            int n1 = index_n1[i];
+            int n2 = index_n2[i];
+            int n3 = index_n3[i];
+            if (n1>0){
+                int index = find_index[n1-1][n2][n3];
+                SymmetricTensor[i] = SymmetricTensor[index]*x;
+            }
+            else{
+                int index = find_index[n1][n2-1][n3];
+                SymmetricTensor[i] = SymmetricTensor[index]*y;
+            }
+        }
+    }
+
+    fill_symmetric_tensor_r(r2, SymmetricTensor);
+
+}
+
+
+//Calculate the totally symmetric tensor r^n times charge Q for charge to multipole calculation
+void Symmetric_Tensor_C2M(double q, double x, double y, double z, double *SymmetricTensor){
+    SymmetricTensor[0] = 1;
+    if (n_Max_rank>0){
+        SymmetricTensor[1] = x*q;
+        SymmetricTensor[2] = y*q;
+        SymmetricTensor[3] = z*q;
     }
     double r2 = x*x+y*y+z*z;
     for(int n=2; n<n_Max_rank+1; ++n){
@@ -348,22 +382,88 @@ void Contraction_traceless(double *High_rank_Tensor, double *Low_rank_Tensor, do
 }
 
 //Take derivative before contraction of two tensors of the same rank
+//void Contraction_dr(double * Tensor1, double * Tensor2, int n, double x, double y, double z, double &cx, double &cy, double &cz){
+//    double tmp[3] = {0,0,0};
+//    double coef[3] = {1/x, 1/y, 1/z};
+//    int ni[3];
+//    for(int i = n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
+//        ni[0] = index_n1[i];
+//        ni[1] = index_n2[i];
+//        ni[2] = index_n3[i];
+//
+////        for(int id=0; id<3; ++id) {
+////                if (ni[id]>0) tmp[id] += coef[id]*ni[id]*combination_coef[i] * Tensor1[i] * Tensor2[i];
+////        }
+//        double comb = combination_coef[i] * Tensor1[i] * Tensor2[i];
+//        for(int id=0; id<3; ++id) tmp[id] += coef[id]*ni[id]*comb;
+//    }
+//
+//    cx += tmp[0];
+//    cy += tmp[1];
+//    cz += tmp[2];
+//}
+
 void Contraction_dr(double * Tensor1, double * Tensor2, int n, double x, double y, double z, double &cx, double &cy, double &cz){
     double tmp[3] = {0,0,0};
     double coef[3] = {1/x, 1/y, 1/z};
     int ni[3];
-    for(int i = n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
+    for(int i = 1; i<n_Rank_Multipole_Start_Position[n+1]; ++i){
         ni[0] = index_n1[i];
         ni[1] = index_n2[i];
         ni[2] = index_n3[i];
 
-        for(int id=0; id<3; ++id) {
-                if (ni[id]>0) tmp[id] += coef[id]*ni[id]*combination_coef[i] * Tensor1[i] * Tensor2[i];
-        }
+//        for(int id=0; id<3; ++id) {
+//                if (ni[id]>0) tmp[id] += coef[id]*ni[id]*combination_coef[i] * Tensor1[i] * Tensor2[i];
+//        }
+        double comb = combination_coef[i] * Tensor1[i] * Tensor2[i];
+        for(int id=0; id<3; ++id) tmp[id] += ni[id]*coef[id]*comb;
     }
 
     cx += tmp[0];
     cy += tmp[1];
     cz += tmp[2];
+
+    if (x==0) cx = 0;
+    if (y==0) cy = 0;
+    if (z==0) cz = 0;
 }
 
+
+void Contraction(double *High_rank_Tensor, double *Low_rank_Tensor, double *HL_rank_Tensor, int m, int n)
+{
+	// m: High rank; n: Low rank; k: Final rank, k=m-n
+	int k = m - n;
+	int m1, m2, m3, n1, n2, n3, k1, k2, k3;
+	int i, j;
+
+	memset(HL_rank_Tensor, 0, Number_of_total_element*sizeof(double));
+
+	//	started index and End index
+	int Started_index_HL = n_Rank_Multipole_Start_Position[k];
+	int End_index_HL = n_Rank_Multipole_Start_Position[k + 1];
+
+	int Started_index_L = n_Rank_Multipole_Start_Position[n];
+	int End_index_L = n_Rank_Multipole_Start_Position[n + 1];
+
+	for (j = Started_index_HL; j < End_index_HL; j++)
+	{
+		k1 = index_n1[j];
+		k2 = index_n2[j];
+		k3 = index_n3[j];
+
+		for (i = Started_index_L; i < End_index_L; i++)
+		{
+			n1 = index_n1[i];
+			n2 = index_n2[i];
+			n3 = index_n3[i];
+
+			m1 = k1 + n1;
+			m2 = k2 + n2;
+			m3 = k3 + n3;
+
+			int index = find_index[m1][m2][m3];
+
+			HL_rank_Tensor[j] += Factorial[n] / (Factorial[n1] * Factorial[n2] * Factorial[n3]) * High_rank_Tensor[index] * Low_rank_Tensor[i];
+		}
+	}
+}
