@@ -215,7 +215,7 @@ void Nabla_r_dr(double x, double y, double z, double * coef, double *Nabla_x, do
 
 
 //Calculate the tensor Nabla 1/r for a give r(x,y,z)
-void Nabla_r_traceless(double x, double y, double z, double * coef, double *Nabla_R)
+void Nabla_r_traceless_formula(double x, double y, double z, double * coef, double *Nabla_R)
 {
     double r_2 = x*x + y*y + z*z;
     double inv_r2 = 1.0/r_2;
@@ -249,6 +249,85 @@ void Nabla_r_traceless(double x, double y, double z, double * coef, double *Nabl
     //Calculate the other elements
 	fill_traceless_tensor(Nabla_R);
 }
+
+
+//Calculate the tensor Nabla 1/r for a give r(x,y,z) using recursive relation
+void Nabla_r_traceless(double x, double y, double z, double * coef, double *Nabla_R)
+{
+    double r_2 = x*x + y*y + z*z;
+    double inv_r2 = 1.0/r_2;
+    double inv_r = sqrt(inv_r2);
+
+    pow_x[0] = 1;
+    pow_y[0] = 1;
+    pow_z[0] = 1;
+    pow_r2[0] = 1;
+
+    for(int i=1; i<n_Max_rank+1; ++i){
+        pow_x[i] = x*pow_x[i-1];
+        pow_y[i] = y*pow_y[i-1];
+        pow_z[i] = z*pow_z[i-1];
+        pow_r2[i] = r_2*pow_r2[i-1];
+    }
+
+    //Calculate the first 2n+1 elements for each rank n
+    int cnt = 0;
+    int rank_dirct_calc = 2;
+    if(n_Max_rank<rank_dirct_calc) rank_dirct_calc = n_Max_rank;
+    for(int n = 0; n<rank_dirct_calc+1; ++n) {
+        //Use the formula to calculate nabla_1_over_r
+        double r_coe = order_minus_one[n] * pow(inv_r2, n) * inv_r;
+        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
+            int n1, n2, n3;
+            n1 = index_n1[i];
+            n2 = index_n2[i];
+            n3 = index_n3[i];
+
+            Nabla_R[i] = Nabla_1_element_r(n1, n2, n3, n, x, y, z, r_2, r_coe, cnt, coef);
+        }
+    }
+    for(int n = rank_dirct_calc+1; n<n_Max_rank+1; ++n) {
+        //Use the recursive relation to calculate nabla_1_over_r
+        double inv_n = 1.0/n;
+        for (int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i) {
+            int n1, n2, n3;
+            n1 = index_n1[i];
+            n2 = index_n2[i];
+            n3 = index_n3[i];
+            double T1 = 0;  //First term in the recursive relation
+            double T2 = 0;  //Second term in the recursive relation
+
+            if (n1>0) {
+                int idx = find_index[n1-1][n2][n3];
+                T1 += x*Nabla_R[idx]*inv_Factorial[n1-1]*inv_Factorial[n2]*inv_Factorial[n3];
+            }
+            if (n2>0) {
+                int idx = find_index[n1][n2-1][n3];
+                T1 += y*Nabla_R[idx]*inv_Factorial[n1]*inv_Factorial[n2-1]*inv_Factorial[n3];;
+            }
+            if (n3>0) {
+                int idx = find_index[n1][n2][n3-1];
+                T1 += z*Nabla_R[idx]*inv_Factorial[n1]*inv_Factorial[n2]*inv_Factorial[n3-1];;
+            }
+            T1 *= (2*n-1);
+            if (n1>1) {
+                int idx = find_index[n1-2][n2][n3];
+                T2 += Nabla_R[idx];
+            }
+            if (n2>1) {
+                int idx = find_index[n1][n2-2][n3];
+                T2 += Nabla_R[idx];
+            }
+            //n3<2 for independent elements of a traceless totally symmetric tensor
+            T2 *= (n-1)*inv_Factorial[n-2];
+            //Recursive relation
+            Nabla_R[i] = -1*(T1+T2)*inv_n*inv_r2*Factorial[n1]*Factorial[n2]*Factorial[n3];
+        }
+    }
+    //Calculate the other elements
+	fill_traceless_tensor(Nabla_R);
+}
+
 
 //Calculate the trace, used in function detracer.
 double tracer(double * tensor, int n1, int n2, int n3, int m){

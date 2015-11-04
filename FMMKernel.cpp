@@ -293,7 +293,6 @@ double MultipolePotential(double *Multipole, double Multi_x, double Multi_y, dou
 	double *Nabla_R = scratch;
 	memset(Nabla_R, 0, Number_of_total_element * sizeof(double));
 	Nabla_r_traceless(Poten_x-Multi_x, Poten_y-Multi_y, Poten_z-Multi_z, Nabla_1_element_r_coef, Nabla_R);
-
 	for (int n_rank = 0; n_rank <= n_Max_rank; n_rank++) multipole_potential += Contraction_equal_rank(Multipole, Nabla_R, n_rank);
 
 	return multipole_potential;
