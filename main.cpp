@@ -193,7 +193,8 @@ int main(){
 //  normal distribution.
 //////     obtain a seed from the timer
     std::default_random_engine generator;
-    generator.seed(time(NULL));
+//    generator.seed(time(NULL));
+    generator.seed(1);
     std::normal_distribution<double> distribution(0.0,1.0);
     for(unsigned long int i=0;i<N;++i){
         x[i] = distribution(generator);
@@ -207,9 +208,14 @@ int main(){
 	scale(z, N);
 	cout<<N<<" particles initialized!"<<endl;
 
-	fmm(x,  y,  z,  q, N, n_rank, n_ptc_box, phi);
-	Coulomb(x,y,z,q,N,N_calc, phi_check);
-	cout<<error(phi_check,phi,N_calc)<<endl;
+    fmm(x,  y,  z,  q, N, n_rank, n_ptc_box, Ex, Ey, Ez);
+	Coulomb(x,y,z,q,N,N_calc, Ex_check, Ey_check, Ez_check);
+	cout<<error(Ex_check,Ey_check, Ez_check,Ex, Ey, Ez,N_calc)<<endl;
+
+//
+//	fmm(x,  y,  z,  q, N, n_rank, n_ptc_box, phi);
+//	Coulomb(x,y,z,q,N,N_calc, phi_check);
+//	cout<<error(phi_check,phi,N_calc)<<endl;
     return 0;
 //	Coulomb(x,y,z,q,N,N_calc,Ex_check,Ey_check,Ez_check);
 

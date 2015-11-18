@@ -289,7 +289,8 @@ void Nabla_r_traceless(double x, double y, double z, double * coef, double *Nabl
     for(int n = rank_dirct_calc+1; n<n_Max_rank+1; ++n) {
         //Use the recursive relation to calculate nabla_1_over_r
         double inv_n = 1.0/n;
-        for (int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i) {
+//        for (int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i) {
+        for (int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n+1]; ++i) {
             int n1, n2, n3;
             n1 = index_n1[i];
             n2 = index_n2[i];
@@ -312,14 +313,14 @@ void Nabla_r_traceless(double x, double y, double z, double * coef, double *Nabl
             T1 *= (2*n-1);
             if (n1>1) {
                 int idx = find_index[n1-2][n2][n3];
-                T2 += Nabla_R[idx];
+                T2 += Nabla_R[idx]*inv_Factorial[n1-2]*inv_Factorial[n2]*inv_Factorial[n3];;
             }
             if (n2>1) {
                 int idx = find_index[n1][n2-2][n3];
-                T2 += Nabla_R[idx];
+                T2 += Nabla_R[idx]*inv_Factorial[n1]*inv_Factorial[n2-2]*inv_Factorial[n3];;
             }
             //n3<2 for independent elements of a traceless totally symmetric tensor
-            T2 *= (n-1)*inv_Factorial[n-2];
+            T2 *= (n-1);
             //Recursive relation
             Nabla_R[i] = -1*(T1+T2)*inv_n*inv_r2*Factorial[n1]*Factorial[n2]*Factorial[n3];
         }

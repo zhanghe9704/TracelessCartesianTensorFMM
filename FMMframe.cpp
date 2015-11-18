@@ -418,7 +418,8 @@ int ill_separated(unsigned long int large_idx, Box &large_box, unsigned long int
         double tex = 0;
         double tey = 0;
         double tez = 0;
-        MultipoleField(&multipole_expns[small_idx*Number_of_total_element], small_box.center[0], small_box.center[1], small_box.center[2], x[ptc_idx], y[ptc_idx], z[ptc_idx],tex,tey,tez);
+        MultipoleField(&multipole_expns[small_idx*Number_of_total_element], small_box.center[0],
+                       small_box.center[1], small_box.center[2], x[ptc_idx], y[ptc_idx], z[ptc_idx],tex,tey,tez);
         Ex[ptc_idx] += tex;
         Ey[ptc_idx] += tey;
         Ez[ptc_idx] += tez;
@@ -573,20 +574,20 @@ int fmm(double * x, double * y, double * z, double * q, unsigned long int n_ptc,
 
 	create_colleague(tree, clg);
 
-    std::ofstream output;
-	char filename[30] = "output_box.txt";
-	output.open(filename);
-
-    int i=0;
-	for(auto iter=tree.begin(); iter!=tree.end(); ++iter) {
-        output<<i<<endl<<*iter;
-        ++i;
-	}
-	output<<endl;
-	for(auto iter=clg.begin(); iter!=clg.end(); ++iter) {
-        output<<*iter;
-	}
-	output.close();
+//    std::ofstream output;
+//	char filename[30] = "output_box.txt";
+//	output.open(filename);
+//
+//    int i=0;
+//	for(auto iter=tree.begin(); iter!=tree.end(); ++iter) {
+//        output<<i<<endl<<*iter;
+//        ++i;
+//	}
+//	output<<endl;
+//	for(auto iter=clg.begin(); iter!=clg.end(); ++iter) {
+//        output<<*iter;
+//	}
+//	output.close();
 
 
     //Save the coefs for Nabla operator
