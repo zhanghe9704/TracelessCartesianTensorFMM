@@ -1,17 +1,14 @@
+#include <chrono>
+#include <cmath>
+#include <cstring>
+#include <fstream>
 #include <iostream>
-#include <stdlib.h>
+#include <random>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <vector>
-
-#include "FMMframe.hpp"
-
-#include <cstring>
-#include <cmath>
-#include <random>
-#include <chrono>
-
-#include <fstream>
+#include "fmm_frame.h"
 
 using std::cout;
 using std::endl;
@@ -70,7 +67,6 @@ int Coulomb(double * x,double * y,double * z,double * q, unsigned long int n_ptc
 
     return 0;
 }
-
 
 int scale(double *x, unsigned long int n){
 	double max_x = x[0];
@@ -208,14 +204,20 @@ int main(){
 	scale(z, N);
 	cout<<N<<" particles initialized!"<<endl;
 
-    fmm(x,  y,  z,  q, N, n_rank, n_ptc_box, Ex, Ey, Ez);
-	Coulomb(x,y,z,q,N,N_calc, Ex_check, Ey_check, Ez_check);
-	cout<<error(Ex_check,Ey_check, Ez_check,Ex, Ey, Ez,N_calc)<<endl;
+//    fmm(x,  y,  z,  q, N, n_rank, n_ptc_box, Ex, Ey, Ez);
+//	Coulomb(x,y,z,q,N,N_calc, Ex_check, Ey_check, Ez_check);
+//	cout<<error(Ex_check,Ey_check, Ez_check,Ex, Ey, Ez,N_calc)<<endl;
 
-//
+
 //	fmm(x,  y,  z,  q, N, n_rank, n_ptc_box, phi);
 //	Coulomb(x,y,z,q,N,N_calc, phi_check);
 //	cout<<error(phi_check,phi,N_calc)<<endl;
+
+    fmm(x,  y,  z,  q, N, n_rank, n_ptc_box, phi, Ex, Ey, Ez);
+	Coulomb(x,y,z,q,N,N_calc, Ex_check, Ey_check, Ez_check);
+	cout<<error(Ex_check,Ey_check, Ez_check,Ex, Ey, Ez,N_calc)<<endl;
+	Coulomb(x,y,z,q,N,N_calc, phi_check);
+	cout<<error(phi_check,phi,N_calc)<<endl;
     return 0;
 //	Coulomb(x,y,z,q,N,N_calc,Ex_check,Ey_check,Ez_check);
 

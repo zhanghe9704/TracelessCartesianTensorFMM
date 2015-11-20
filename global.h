@@ -11,23 +11,20 @@ By He Huang & He Zhang, 12/29/2014
 
 ***********************************/
 
+#ifndef GLOBAL_H
+#define GLOBAL_H
 
-#ifndef HEAD_HPP
-#define HEAD_HPP
-
-#include <stdio.h>
+#include <fstream>
 #include <iostream>
 #include <iomanip>
-#include <fstream>
 #include <math.h>
+#include <stdio.h>
 
-#include "FMMConstants.hpp"
-#include "Function.hpp"
-#include "FMMKernel.hpp"
-
-
-#include "FMMframe.hpp"
-#include "box.hpp"
+#include "box.h"
+#include "fmm_constants.h"
+#include "fmm_frame.h"
+#include "fmm_kernel.h"
+#include "functions.h"
 
 extern int n_Max_rank, Number_of_total_element;
 extern unsigned long int Number_of_particle;
@@ -45,6 +42,8 @@ extern double * pow_x;
 extern double * pow_y;
 extern double * pow_z;
 extern double * pow_r2;
+
+extern Flag g_flag;
 
 
 #endif

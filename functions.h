@@ -16,8 +16,8 @@ By He Huang & He Zhang, 12/29/2014
 ***********************************/
 
 
-#ifndef FUNCTION_HPP
-#define FUNCTION_HPP
+#ifndef FUNCTIONS_H
+#define FUNCTIONS_H
 
 //output i3>=i2>=i1, if sequence changed return a number greater than 0;
 int sequence3 (int x[3], int idx[3]);
@@ -57,6 +57,7 @@ void Nabla_1_element_r_dr(int n1, int n2, int n3, int n, double x, double y, dou
 
 //Calculate the derivative of the tensor Nabla 1/r for a give r(x,y,z)
 void Nabla_r_dr(double x, double y, double z, double * coef, double *Nabla_x, double *Nabla_y, double *Nabla_z);
-#endif
+
 
 void Contraction(double *High_rank_Tensor, double *Low_rank_Tensor, double *HL_rank_Tensor, int m, int n);
+#endif

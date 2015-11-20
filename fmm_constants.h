@@ -11,12 +11,12 @@ By He Huang & He Zhang, 12/29/2014
 
 ***********************************/
 
-
-#ifndef FMM_CONSTANTS_HPP
-#define FMM_CONSTANTS_HPP
-
+#ifndef FMM_CONSTANTS_H
+#define FMM_CONSTANTS_H
 
 #include <cstring>
+
+enum Flag {POTENTIAL, FIELD, BOTH};
 
 //The factorial of x for x in [0,22];
 const double Factorial[23] = {

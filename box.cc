@@ -11,12 +11,11 @@ version 1.0
 By He Zhang, 02/2014
 
 ***********************************/
-
-
-#include "box.hpp"
+#include "box.h"
 
 //Find the center and the box size of the root box
-int find_root_center(double *x, double * y, double * z, const unsigned long int N, double &cx, double &cy, double &cz, double &size){
+int find_root_center(double *x, double * y, double * z, const unsigned long int N, double &cx, double &cy, double &cz,
+                     double &size){
 	double max_x = x[0];
 	double max_y = y[0];
 	double max_z = z[0];
@@ -46,7 +45,8 @@ int find_root_center(double *x, double * y, double * z, const unsigned long int 
 }
 
 //Create the hierarchical tree structure of the boxes
-int create_tree(double * x, double * y, double * z, const unsigned long int n, const unsigned int s, vector<Box> &tree, unsigned long int * list){
+int create_tree(double * x, double * y, double * z, const unsigned long int n, const unsigned int s, vector<Box> &tree,
+                unsigned long int * list){
 
 	Box empty_box;
 

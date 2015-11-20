@@ -12,7 +12,7 @@ By He Huang & He Zhang, 12/29/2014
 
 ***********************************/
 
-#include "FMMConstants.hpp"
+#include "fmm_constants.h"
 
 //Global variables
 int n_Max_rank, Number_of_total_element;
@@ -30,6 +30,8 @@ double * pow_x;
 double * pow_y;
 double * pow_z;
 double * pow_r2;
+//flag indicates what's to calculate.
+Flag g_flag = Flag::BOTH;
 
 //Calculate the coefs for combination operator
 int calc_combination_coef(double * combination_coef){

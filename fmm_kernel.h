@@ -15,13 +15,11 @@ By He Huang & He Zhang, 12/29/2014
 
 ***********************************/
 
+#ifndef FMM_KERNEL_H
+#define FMM_KERNEL_H
 
-
-#ifndef FMMKERNEL_HPP
-#define FMMKERNEL_HPP
-
-#include "box.hpp"
-#include "head.hpp"
+#include "box.h"
+#include "global.h"
 
 //Calculate the multipole from charges inside a childless box
 void Charge_to_Multipole(Box & box, double *Charge, double *Charge_x, double *Charge_y, double *Charge_z, unsigned long int *ptclist, double *Born_Multipole);
@@ -47,17 +45,14 @@ void Calc_Rho_Tensor(double boxsize, double * Rho_Tensor);
 //Update the L2L operator for one level down (go downwards)
 void update_Rho_Tensor(double * Rho_Tensor);
 
-//Calculate the Coulomb potential using the multipole expansion, for ill-separated boxes
-double MultipolePotential(double *Multipole, double Multi_x, double Multi_y, double Multi_z, double Poten_x, double Poten_y, double Poten_z);
-
 //Calculate the local expansion from charges inside a ill-separated box
 void Charge_to_Local_traceless(Box &box, unsigned long int * ptclist, double *q, double *old_x, double *old_y, double *old_z, double new_x, double new_y, double new_z, double *L_expansion);
 
-//Calculate the Coulomb potential from the local expansion of a childless box
-double LocalPotential(double *Local_expan, double Local_x, double Local_y, double Local_z, double observer_x, double observer_y, double observer_z);
+int multipole_to_charge(double *multipole, const double &multi_x, const double &multi_y, const double &multi_z,
+                        const double &obsv_x, const double &obsv_y, const double &obsv_z,
+                        double &phi, double &ex, double &ey, double &ez);
 
-void MultipoleField(double *Multipole, double Multi_x, double Multi_y, double Multi_z, double Poten_x, double Poten_y, double Poten_z, double &Ex, double &Ey, double &Ez);
-
-void LocalField(double *Local_expan, double Local_x, double Local_y, double Local_z, double observer_x, double observer_y, double observer_z, double &Ex, double &Ey, double &Ez);
-
+int local_to_charge(double *local_expn, const double &local_x, const double &local_y, const double &local_z,
+                    const double &obsv_x, const double &obsv_y, const double &obsv_z, double &phi,
+                    double &ex, double &ey, double &ez);
 #endif

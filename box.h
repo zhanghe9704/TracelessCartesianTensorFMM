@@ -13,17 +13,15 @@ By He Zhang, 02/2015
 
 ***********************************/
 
-
-#ifndef BOX_HPP
-#define BOX_HPP
-
-#include <vector>
+#ifndef BOX_H
+#define BOX_H
+#include <cmath>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <utility>
-#include <cstdlib>
-#include <cmath>
-#include <cstring>
+#include <vector>
 
 using std::vector;
 using std::cout;
@@ -44,7 +42,8 @@ typedef struct Colleague{
 } Colleague;
 
 //Create the hierarchical tree structure of the boxes
-int create_tree(double * x, double * y, double * z, const unsigned long int n, const unsigned int s, vector<Box> &tree, unsigned long int * list);
+int create_tree(double * x, double * y, double * z, const unsigned long int n, const unsigned int s, vector<Box> &tree,
+                unsigned long int * list);
 //Create the colleague list for all boxes
 int create_colleague(vector<Box> &box, vector<Colleague> &clg);
 //Find the relation between two boxes: adjcent (return 0), ill separated (return 1), or well separated (return 2)

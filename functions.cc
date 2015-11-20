@@ -16,7 +16,7 @@ By He Huang & He Zhang, 12/29/2014
 ***********************************/
 
 
-#include "head.hpp"
+#include "global.h"
 
 //output i3>=i2>=i1, if sequence changed return a number greater than 0;
 int sequence3 (int x[3], int idx[3]){
@@ -74,6 +74,31 @@ void Symmetric_Tensor(double x, double y, double z, double *SymmetricTensor){
 
 }
 
+void symmetric_tensor(double x, double y, double z, double *tensor){
+    tensor[0] = 1;
+    if (n_Max_rank>0){
+        tensor[1] = x;
+        tensor[2] = y;
+        tensor[3] = z;
+    }
+    double r2 = x*x+y*y+z*z;
+    for(int n=2; n<n_Max_rank+1; ++n){
+        for(int i=n_Rank_Multipole_Start_Position[n]; i<n_Rank_Multipole_Start_Position[n]+2*n+1; ++i){
+            int n1 = index_n1[i];
+            int n2 = index_n2[i];
+            int n3 = index_n3[i];
+            if (n1>0){
+                int index = find_index[n1-1][n2][n3];
+                tensor[i] = tensor[index]*x;
+            }
+            else{
+                int index = find_index[n1][n2-1][n3];
+                tensor[i] = tensor[index]*y;
+            }
+        }
+    }
+    fill_symmetric_tensor_r(r2, tensor);
+}
 
 //Calculate the totally symmetric tensor r^n times charge Q for charge to multipole calculation
 void Symmetric_Tensor_C2M(double q, double x, double y, double z, double *SymmetricTensor){

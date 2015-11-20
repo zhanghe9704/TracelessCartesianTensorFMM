@@ -18,7 +18,7 @@ By He Huang & He Zhang, 12/29/2014
 
 
 
-#include "FMMKernel.hpp"
+#include "fmm_kernel.h"
 
 
 //This function is used in the "Charge_to_Multipole" function.
@@ -286,64 +286,30 @@ void Local_to_Local(double *Old_Local, double Old_x, double Old_y, double Old_z,
 	fill_traceless_tensor(New_Local);
 }
 
-double MultipolePotential(double *Multipole, double Multi_x, double Multi_y, double Multi_z, double Poten_x, double Poten_y, double Poten_z)
-{
-	double multipole_potential = 0;
+int multipole_to_charge(double *multipole, const double &multi_x, const double &multi_y, const double &multi_z,
+                        const double &obsv_x, const double &obsv_y, const double &obsv_z,
+                        double &phi, double &ex, double &ey, double &ez) {
+    double *nabla_r = scratch;
+    memset(nabla_r, 0, Number_of_total_element * sizeof(double));
+    Nabla_r_traceless(obsv_x-multi_x, obsv_y-multi_y, obsv_z-multi_z, Nabla_1_element_r_coef, nabla_r);
 
-	double *Nabla_R = scratch;
-	memset(Nabla_R, 0, Number_of_total_element * sizeof(double));
-	Nabla_r_traceless(Poten_x-Multi_x, Poten_y-Multi_y, Poten_z-Multi_z, Nabla_1_element_r_coef, Nabla_R);
-	for (int n_rank = 0; n_rank <= n_Max_rank; n_rank++) multipole_potential += Contraction_equal_rank(Multipole, Nabla_R, n_rank);
-
-	return multipole_potential;
+    if(g_flag!=Flag::FIELD) {
+        double potential = 0;
+        for (int n_rank = 0; n_rank <= n_Max_rank; n_rank++)
+            potential += Contraction_equal_rank(multipole, nabla_r, n_rank);
+        phi += potential;
+    }
+    if(g_flag!=Flag::POTENTIAL) {
+        double *field = scratch2;
+        for (int n_rank = 0; n_rank < n_Max_rank; ++n_rank){
+            Contraction_traceless(nabla_r,multipole,field,n_rank+1,n_rank);
+            ex -= field[1];
+            ey -= field[2];
+            ez -= field[3];
+        }
+    }
+    return 0;
 }
-
-
-void MultipoleField(double *Multipole, double Multi_x, double Multi_y, double Multi_z, double Poten_x, double Poten_y, double Poten_z, double &Ex, double &Ey, double &Ez)
-{
-
-
-	double *Field = scratch2;
-//    memset(Field, 0, Number_of_total_element * sizeof(double));
-	double *Nabla_R = scratch;
-	memset(Nabla_R, 0, Number_of_total_element * sizeof(double));
-	Nabla_r_traceless(Poten_x-Multi_x, Poten_y-Multi_y, Poten_z-Multi_z, Nabla_1_element_r_coef, Nabla_R);
-
-	for (int i = 0; i < n_Max_rank; ++i){
-        Contraction_traceless(Nabla_R,Multipole,Field,i+1,i);
-//        Contraction(Nabla_R,Multipole,Field,i+1,i);
-        Ex -= Field[1];
-        Ey -= Field[2];
-        Ez -= Field[3];
-	}
-}
-
-//
-//void MultipoleField_dr(double *Multipole, double Multi_x, double Multi_y, double Multi_z, double Poten_x, double Poten_y, double Poten_z, double &Ex, double &Ey, double &Ez)
-//{
-//	double M_ex = 0;
-//	double M_ey = 0;
-//	double M_ez = 0;
-//
-//	double *Nabla_x = scratch;
-//	memset(Nabla_x, 0, Number_of_total_element * sizeof(double));
-//	double *Nabla_y = scratch2;
-//	memset(Nabla_y, 0, Number_of_total_element * sizeof(double));
-//	double *Nabla_z = scratch3;
-//	memset(Nabla_z, 0, Number_of_total_element * sizeof(double));
-//	Nabla_r_dr(Poten_x-Multi_x, Poten_y-Multi_y, Poten_z-Multi_z, Nabla_1_element_dr_coef, Nabla_x, Nabla_y, Nabla_z);
-//
-//	for (int n_rank = 0; n_rank <= n_Max_rank; n_rank++){
-//        M_ex += Contraction_equal_rank(Multipole, Nabla_x, n_rank);
-//        M_ey += Contraction_equal_rank(Multipole, Nabla_y, n_rank);
-//        M_ez += Contraction_equal_rank(Multipole, Nabla_z, n_rank);
-//	}
-//
-//	Ex -= M_ex;
-//	Ey -= M_ey;
-//	Ez -= M_ez;
-//}
-
 
 //This function is used in the "Charge_to_Local_traceless" function.
 void Charge_to_Local_pre_traceless(double q, double old_x, double old_y, double old_z, double new_x, double new_y, double new_z, double *L_expansion)
@@ -410,42 +376,29 @@ void Charge_to_Local_traceless(Box &box, unsigned long int * ptclist, double *q,
 
 }
 
-
-double LocalPotential(double *Local_expan, double Local_x, double Local_y, double Local_z, double observer_x, double observer_y, double observer_z)
-{
-	double x = observer_x - Local_x;
-	double y = observer_y - Local_y;
-	double z = observer_z - Local_z;
-
-	double L_Potential = 0;
-
-	double *SymmeticTensor = scratch;
-	memset(SymmeticTensor, 0, Number_of_total_element*sizeof(double));
-	Symmetric_Tensor(x, y, z, SymmeticTensor);
-
-	for (int i = 0; i <= n_Max_rank; i++) L_Potential += Contraction_equal_rank(Local_expan, SymmeticTensor,i);
-
-	return L_Potential;
+int local_to_charge(double *local_expn, const double &local_x, const double &local_y, const double &local_z,
+                    const double &obsv_x, const double &obsv_y, const double &obsv_z, double &phi,
+                    double &ex, double &ey, double &ez) {
+    double dx = obsv_x - local_x;
+    double dy = obsv_y - local_y;
+    double dz = obsv_z - local_z;
+    double *tensor_rn = scratch;
+    memset(tensor_rn, 0, Number_of_total_element*sizeof(double));
+	Symmetric_Tensor(dx, dy, dz, tensor_rn);
+	if(g_flag!=Flag::FIELD) {
+        double potential = 0;
+        for (int i = 0; i <= n_Max_rank; i++) potential += Contraction_equal_rank(local_expn, tensor_rn,i);
+        phi += potential;
+	}
+	if(g_flag!=Flag::POTENTIAL) {
+        double field_x = 0;
+        double field_y = 0;
+        double field_z = 0;
+        Contraction_dr(local_expn, tensor_rn, n_Max_rank, dx, dy, dz, field_x, field_y, field_z);
+        ex -= field_x;
+        ey -= field_y;
+        ez -= field_z;
+	}
+	return 0;
 }
 
-void LocalField(double *Local_expan, double Local_x, double Local_y, double Local_z, double observer_x, double observer_y, double observer_z, double &Ex, double &Ey, double &Ez){
-
-    double dx = observer_x - Local_x;
-    double dy = observer_y - Local_y;
-    double dz = observer_z - Local_z;
-
-    double L_ex = 0;
-    double L_ey = 0;
-    double L_ez = 0;
-    double *SymmeticTensor = scratch;
-	memset(SymmeticTensor, 0, Number_of_total_element*sizeof(double));
-	Symmetric_Tensor(dx, dy, dz, SymmeticTensor);
-
-//	for (int i = 1; i <= n_Max_rank; ++i) Contraction_dr(Local_expan, SymmeticTensor,i, dx, dy, dz, L_ex, L_ey, L_ez);
-
-    Contraction_dr(Local_expan, SymmeticTensor,n_Max_rank, dx, dy, dz, L_ex, L_ey, L_ez);
-
-	Ex -= L_ex;
-	Ey -= L_ey;
-	Ez -= L_ez;
-}
