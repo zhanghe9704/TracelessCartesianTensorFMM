@@ -1,26 +1,7 @@
-/**********************************
-box.hpp
-Define the box data structure and the colleague list for each box
-Declare functions to manipulate the box structure
-
-version 1.1
-By He Zhang,04/06/2015
-Fixed the following bug:
-    Wrong criterion for ill-separated boxes
-
-version 1.0
-By He Zhang, 02/2015
-
-***********************************/
-
 #ifndef BOX_H
 #define BOX_H
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+
 #include <iostream>
-#include <utility>
 #include <vector>
 
 using std::vector;

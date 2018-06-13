@@ -1,21 +1,3 @@
-/**********************************
-Function.cpp
-Declare the math functions used in the kernel functions for the multiple level fast multipole algorithm using tensors
-
-version 3.0
-By He Zhang 04/06/2015
-Add functions needed for field calculation.
-
-version 2.0
-By He Zhang 03/06/2015
-All functions revised and more functions added for better performance.
-
-version 1.0
-By He Huang & He Zhang, 12/29/2014
-
-***********************************/
-
-
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
@@ -23,41 +5,34 @@ By He Huang & He Zhang, 12/29/2014
 int sequence3 (int x[3], int idx[3]);
 
 //Calculate the totally symmetric tensor r^n
-void Symmetric_Tensor(double x, double y, double z, double *SymmeticTensor);
+void symmetric_tensor(double x, double y, double z, double *tensor);
 
 //Calculate the totally symmetric tensor r^n times charge Q for charge to multipole calculation
-void Symmetric_Tensor_C2M(double q, double x, double y, double z, double *SymmetricTensor);
+//void Symmetric_Tensor_C2M(double q, double x, double y, double z, double *SymmetricTensor);
+void symmetric_tensor_c2m(double q, double x, double y, double z, double *symmetric_tensor);
 
 //Calculate the value of a specific element of the tensor/operator Nabla 1/r
-double Nabla_1_element_r(int n1, int n2, int n3, int n, double x, double y, double z, double r_2, double r_coe, int &cnt, double * coef);
+double nabla_element_r(int n1, int n2, int n3, int n, double x, double y, double z, double r_2, double r_coe, int &cnt,
+                       double *coef);
 
 //Calculate the tensor Nabla 1/r for a give r(x,y,z)
-void Nabla_r_traceless(double x, double y, double z, double * coef, double *Nabla_R);
+void nabla_r_traceless(double x, double y, double z, double *coef, double *nabla_r);
 
-//Contraction of two tensors. The high rank one is traceless totally symmetric, the low rank one is totally symmetric, the result is traceless totally symmetric
-void Contraction_traceless(double *High_rank_Tensor, double *Low_rank_Tensor, double *HL_rank_Tensor, int m, int n);
-
-//Using the value of the first 2*n+1 elements to calculate the value of the other elements for a traceless totally symmetric tensor
-void fill_traceless_tensor(double * tensor);
+//Using the value of the first 2*n+1 elements to calculate the value of the other elements for a traceless totally
+//symmetric tensor
+void fill_traceless_tensor(double *tensor);
 
 //fill the totally symmetric tensor r^n
-void fill_symmetric_tensor_r(double r2, double *SymmetricTensor);
+void fill_symmetric_tensor_r(double r2, double *symmetric_tensor);
 //contraction of two tensors of the same rank
-double Contraction_equal_rank(double * Tensor1, double * Tensor2, int n);
+double contraction_equal_rank(double * tensor1, double * tensor2, int n);
 
-//Detracer operator, convert a totally symmetric tensor into a traceless totally symmetric tensor. Not used in current version.
-void detracer(double * symmetric_tensor, double * traceless_tensor);
-
+//Contraction of two tensors. The high rank one is traceless totally symmetric, the low rank one is totally symmetric,
+//the result is traceless totally symmetric
+void contraction_traceless(double *high_rank_tensor, double *low_rank_tensor, double *output_tensor, int m, int n);
 
 //Take derivative before contraction of two tensors of the same rank
-void Contraction_dr(double * Tensor1, double * Tensor2, int n, double x, double y, double z, double &cx, double &cy, double &cz);
+void contraction_dr(double *tensor1, double *tensor2, int n, double x, double y, double z, double &cx, double &cy,
+                    double &cz);
 
-//Take derivative of the tensor/operator Nabla 1/r for a given r
-void Nabla_1_element_r_dr(int n1, int n2, int n3, int n, double x, double y, double z, double r_2, double r_coe, int &cnt, double * coef, double * one_element);
-
-//Calculate the derivative of the tensor Nabla 1/r for a give r(x,y,z)
-void Nabla_r_dr(double x, double y, double z, double * coef, double *Nabla_x, double *Nabla_y, double *Nabla_z);
-
-
-void Contraction(double *High_rank_Tensor, double *Low_rank_Tensor, double *HL_rank_Tensor, int m, int n);
 #endif

@@ -1,16 +1,3 @@
-/**********************************
-head.hpp
-List of the head files and global variables
-
-version 2.0
-By He Zhang, 03/06/2015
-More scratch variable added for better performance.
-
-version 1.0
-By He Huang & He Zhang, 12/29/2014
-
-***********************************/
-
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
@@ -26,24 +13,20 @@ By He Huang & He Zhang, 12/29/2014
 #include "fmm_kernel.h"
 #include "functions.h"
 
-extern int n_Max_rank, Number_of_total_element;
-extern unsigned long int Number_of_particle;
-extern double *scratch;
-extern double *scratch2;
-//extern double *scratch3;
-extern unsigned long int *ptclist;
-extern double * multipole_expns;
-extern double * local_expns;
-extern double * combination_coef;
-extern double * Nabla_1_element_r_coef;
-//extern double * Nabla_1_element_dr_coef;
-
-extern double * pow_x;
-extern double * pow_y;
-extern double * pow_z;
-extern double * pow_r2;
-
+extern int MAX_RANK;
+extern int TOTAL_ELEMENT_NUMBER;
+extern unsigned long int TOTAL_PARTICLE_NUMBER;
+extern double *g_scratch;
+extern double *g_scratch2;
+extern unsigned long int *g_ptclist;
+extern double *g_multipole_expns;
+extern double *g_local_expns;
+extern double *g_combination_coef;
+extern double *g_nabla_coef;
+extern double *g_pow_x;
+extern double *g_pow_y;
+extern double *g_pow_z;
+extern double *g_pow_r2;
 extern Flag g_flag;
-
 
 #endif
